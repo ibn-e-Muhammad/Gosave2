@@ -5,11 +5,13 @@ const router = express.Router();
 const dealsRoutes = require('./deals');
 const partnersRoutes = require('./partners');
 const authRoutes = require('./auth');
+const adminUsersRoutes = require('./admin/users');
 
 // Use route modules
 router.use('/deals', dealsRoutes);
 router.use('/partners', partnersRoutes);
 router.use('/auth', authRoutes);
+router.use('/admin/users', adminUsersRoutes);
 
 // API info endpoint
 router.get('/', (req, res) => {
@@ -20,7 +22,10 @@ router.get('/', (req, res) => {
       health: '/health',
       deals: '/deals',
       partners: '/partners',
-      auth: '/auth'
+      auth: '/auth',
+      admin: {
+        users: '/admin/users'
+      }
     }
   });
 });
