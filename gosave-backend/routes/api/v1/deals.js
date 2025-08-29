@@ -4,6 +4,7 @@ const {
   verifyToken,
   requireValidMembership,
   requirePremiumMembership,
+  requireAdmin,
 } = require("../../../middleware/auth");
 const router = express.Router();
 
@@ -287,6 +288,493 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Failed to fetch deal",
+    });
+  }
+});
+
+// === ADMIN ROUTES FOR DEAL MANAGEMENT ===
+
+// GET /api/v1/deals/admin/all - Get all deals (admin only)
+router.get("/admin/all", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { status, category, partner_id, search } = req.query;
+
+    let query = supabase
+      .from("deals")
+      .select(
+        `
+        id,
+        deal_title,
+        description,
+        start_date,
+        end_date,
+        min_discount,
+        max_discount,
+        membership_tier,
+        location,
+        city,
+        image_url,
+        terms_conditions,
+        usage_instructions,
+        max_redemptions,
+        current_redemptions,
+        is_featured,
+        status,
+        created_at,
+        updated_at,
+        partners (
+          id,
+          brand_name,
+          business_type,
+          status
+        ),
+        deal_categories (
+          id,
+          name
+        ),
+        created_by:users!deals_created_by_fkey (
+          id,
+          full_name
+        )
+      `
+      )
+      .order("created_at", { ascending: false });
+
+    // Apply filters
+    if (status) {
+      query = query.eq("status", status);
+    }
+    if (category) {
+      query = query.eq("category_id", category);
+    }
+    if (partner_id) {
+      query = query.eq("partner_id", partner_id);
+    }
+    if (search) {
+      query = query.or(
+        `deal_title.ilike.%${search}%,description.ilike.%${search}%`
+      );
+    }
+
+    const { data: deals, error } = await query;
+
+    if (error) {
+      console.error("Database error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch admin deals",
+      });
+    }
+
+    // Transform data
+    const transformedDeals = deals.map((deal) => ({
+      id: deal.id,
+      title: deal.deal_title,
+      description: deal.description,
+      brand: deal.partners?.brand_name || "Unknown Brand",
+      brandId: deal.partners?.id,
+      category: deal.deal_categories?.name || "Uncategorized",
+      categoryId: deal.deal_categories?.id,
+      discount:
+        deal.min_discount === deal.max_discount
+          ? `${deal.min_discount}%`
+          : `${deal.min_discount}-${deal.max_discount}%`,
+      minDiscount: deal.min_discount,
+      maxDiscount: deal.max_discount,
+      location: deal.location,
+      city: deal.city,
+      tier: deal.membership_tier,
+      startDate: deal.start_date,
+      endDate: deal.end_date,
+      imageUrl: deal.image_url,
+      termsConditions: deal.terms_conditions,
+      usageInstructions: deal.usage_instructions,
+      maxRedemptions: deal.max_redemptions,
+      currentRedemptions: deal.current_redemptions,
+      isFeatured: deal.is_featured,
+      status: deal.status,
+      createdAt: deal.created_at,
+      updatedAt: deal.updated_at,
+      createdBy: deal.created_by?.full_name || "Unknown",
+      partnerStatus: deal.partners?.status,
+      isActive:
+        deal.status === "active" && new Date(deal.end_date) >= new Date(),
+    }));
+
+    res.json({
+      success: true,
+      data: transformedDeals,
+      count: transformedDeals.length,
+    });
+  } catch (error) {
+    console.error("Error fetching admin deals:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch admin deals",
+    });
+  }
+});
+
+// POST /api/v1/deals/admin/create - Create new deal (admin only)
+router.post("/admin/create", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const {
+      partner_id,
+      deal_title,
+      description,
+      start_date,
+      end_date,
+      min_discount,
+      max_discount,
+      membership_tier,
+      location,
+      city,
+      image_url,
+      terms_conditions,
+      usage_instructions,
+      max_redemptions,
+      is_featured,
+      status,
+      category_id,
+    } = req.body;
+
+    // Validation
+    if (
+      !partner_id ||
+      !deal_title ||
+      !start_date ||
+      !end_date ||
+      !min_discount
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields",
+      });
+    }
+
+    // Validate partner exists and is approved
+    const { data: partner, error: partnerError } = await supabase
+      .from("partners")
+      .select("id, status")
+      .eq("id", partner_id)
+      .eq("status", "approved")
+      .single();
+
+    if (partnerError || !partner) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid or unapproved partner",
+      });
+    }
+
+    // Create deal
+    const { data: deal, error } = await supabase
+      .from("deals")
+      .insert([
+        {
+          partner_id,
+          deal_title,
+          description,
+          start_date,
+          end_date,
+          min_discount,
+          max_discount: max_discount || min_discount,
+          membership_tier: membership_tier || "basic",
+          location,
+          city,
+          image_url,
+          terms_conditions,
+          usage_instructions,
+          max_redemptions: max_redemptions || 0,
+          current_redemptions: 0,
+          is_featured: is_featured || false,
+          status: status || "active",
+          category_id,
+          created_by: req.user.id,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Database error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to create deal",
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      data: deal,
+      message: "Deal created successfully",
+    });
+  } catch (error) {
+    console.error("Error creating deal:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to create deal",
+    });
+  }
+});
+
+// PUT /api/v1/deals/admin/:id - Update deal (admin only)
+router.put("/admin/:id", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      deal_title,
+      description,
+      start_date,
+      end_date,
+      min_discount,
+      max_discount,
+      membership_tier,
+      location,
+      city,
+      image_url,
+      terms_conditions,
+      usage_instructions,
+      max_redemptions,
+      is_featured,
+      status,
+      category_id,
+    } = req.body;
+
+    // Check if deal exists
+    const { data: existingDeal, error: fetchError } = await supabase
+      .from("deals")
+      .select("id")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existingDeal) {
+      return res.status(404).json({
+        success: false,
+        error: "Deal not found",
+      });
+    }
+
+    // Update deal
+    const updateData = {};
+    if (deal_title !== undefined) updateData.deal_title = deal_title;
+    if (description !== undefined) updateData.description = description;
+    if (start_date !== undefined) updateData.start_date = start_date;
+    if (end_date !== undefined) updateData.end_date = end_date;
+    if (min_discount !== undefined) updateData.min_discount = min_discount;
+    if (max_discount !== undefined) updateData.max_discount = max_discount;
+    if (membership_tier !== undefined)
+      updateData.membership_tier = membership_tier;
+    if (location !== undefined) updateData.location = location;
+    if (city !== undefined) updateData.city = city;
+    if (image_url !== undefined) updateData.image_url = image_url;
+    if (terms_conditions !== undefined)
+      updateData.terms_conditions = terms_conditions;
+    if (usage_instructions !== undefined)
+      updateData.usage_instructions = usage_instructions;
+    if (max_redemptions !== undefined)
+      updateData.max_redemptions = max_redemptions;
+    if (is_featured !== undefined) updateData.is_featured = is_featured;
+    if (status !== undefined) updateData.status = status;
+    if (category_id !== undefined) updateData.category_id = category_id;
+
+    updateData.updated_by = req.user.id;
+
+    const { data: deal, error } = await supabase
+      .from("deals")
+      .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Database error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to update deal",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: deal,
+      message: "Deal updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating deal:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to update deal",
+    });
+  }
+});
+
+// DELETE /api/v1/deals/admin/:id - Delete deal (admin only)
+router.delete("/admin/:id", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if deal exists
+    const { data: existingDeal, error: fetchError } = await supabase
+      .from("deals")
+      .select("id, deal_title")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existingDeal) {
+      return res.status(404).json({
+        success: false,
+        error: "Deal not found",
+      });
+    }
+
+    // Delete deal (this will also delete related analytics due to CASCADE)
+    const { error } = await supabase.from("deals").delete().eq("id", id);
+
+    if (error) {
+      console.error("Database error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to delete deal",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Deal "${existingDeal.deal_title}" deleted successfully`,
+    });
+  } catch (error) {
+    console.error("Error deleting deal:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to delete deal",
+    });
+  }
+});
+
+// GET /api/v1/deals/admin/analytics - Get deal analytics (admin only)
+router.get("/admin/analytics", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { deal_id, start_date, end_date, action_type } = req.query;
+
+    let analyticsQuery = supabase
+      .from("deal_analytics")
+      .select(
+        `
+        id,
+        action_type,
+        created_at,
+        deals (
+          id,
+          deal_title,
+          partners (
+            brand_name
+          )
+        ),
+        users (
+          id,
+          full_name
+        )
+      `
+      )
+      .order("created_at", { ascending: false });
+
+    // Apply filters
+    if (deal_id) {
+      analyticsQuery = analyticsQuery.eq("deal_id", deal_id);
+    }
+    if (start_date) {
+      analyticsQuery = analyticsQuery.gte("created_at", start_date);
+    }
+    if (end_date) {
+      analyticsQuery = analyticsQuery.lte("created_at", end_date);
+    }
+    if (action_type) {
+      analyticsQuery = analyticsQuery.eq("action_type", action_type);
+    }
+
+    const { data: analytics, error: analyticsError } =
+      await analyticsQuery.limit(1000);
+
+    // Get summary statistics
+    const { data: summaryData, error: summaryError } = await supabase.rpc(
+      "get_deal_analytics_summary",
+      {
+        p_start_date: start_date || "1970-01-01",
+        p_end_date: end_date || "2099-12-31",
+        p_deal_id: deal_id || null,
+      }
+    );
+
+    if (analyticsError) {
+      console.error("Analytics error:", analyticsError);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch deal analytics",
+      });
+    }
+
+    // Transform analytics data
+    const transformedAnalytics =
+      analytics?.map((item) => ({
+        id: item.id,
+        actionType: item.action_type,
+        createdAt: item.created_at,
+        dealTitle: item.deals?.deal_title,
+        brandName: item.deals?.partners?.brand_name,
+        userName: item.users?.full_name,
+      })) || [];
+
+    res.json({
+      success: true,
+      data: {
+        analytics: transformedAnalytics,
+        summary: summaryData?.[0] || {
+          total_views: 0,
+          total_clicks: 0,
+          total_redeems: 0,
+          total_saves: 0,
+          unique_users: 0,
+        },
+      },
+      count: transformedAnalytics.length,
+    });
+  } catch (error) {
+    console.error("Error fetching deal analytics:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch deal analytics",
+    });
+  }
+});
+
+// GET /api/v1/deals/admin/categories - Get all deal categories (admin only)
+router.get("/admin/categories", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { data: categories, error } = await supabase
+      .from("deal_categories")
+      .select("*")
+      .eq("is_active", true)
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("Database error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch categories",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: categories,
+      count: categories.length,
+    });
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch categories",
     });
   }
 });

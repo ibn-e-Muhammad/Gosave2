@@ -6,12 +6,14 @@ import GlassCard from "../../components/UI/GlassCard";
 import Button from "../../components/UI/Button";
 import UserManagementTable from "../../components/Admin/Users/UserManagementTable";
 import PartnerApprovalQueue from "../../components/Admin/Partners/PartnerApprovalQueue";
+import DealManagementTable from "../../components/Admin/Deals/DealManagementTable";
+import DealAnalytics from "../../components/Admin/Deals/DealAnalytics";
 
 const AdminDashboard = () => {
   const { session } = useAuth();
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
-  const [currentView, setCurrentView] = useState("overview"); // 'overview', 'users', or 'partners'
+  const [currentView, setCurrentView] = useState("overview"); // 'overview', 'users', 'partners', 'deals', 'analytics'
 
   useEffect(() => {
     const fetchAdminStats = async () => {
@@ -121,6 +123,26 @@ const AdminDashboard = () => {
               >
                 Partner Management
               </button>
+              <button
+                onClick={() => setCurrentView("deals")}
+                className={`px-6 py-3 rounded-lg transition-all duration-200 ${
+                  currentView === "deals"
+                    ? "bg-indigo-600 text-white shadow-lg"
+                    : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
+                }`}
+              >
+                Deal Management
+              </button>
+              <button
+                onClick={() => setCurrentView("analytics")}
+                className={`px-6 py-3 rounded-lg transition-all duration-200 ${
+                  currentView === "analytics"
+                    ? "bg-indigo-600 text-white shadow-lg"
+                    : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
+                }`}
+              >
+                Analytics
+              </button>
             </div>
           </div>
 
@@ -188,11 +210,18 @@ const AdminDashboard = () => {
                       >
                         Manage Partners
                       </Button>
-                      <Button variant="ghost" size="lg">
-                        Approve Partners
+                      <Button 
+                        size="lg" 
+                        onClick={() => setCurrentView("deals")}
+                      >
+                        Manage Deals
                       </Button>
-                      <Button variant="ghost" size="lg">
-                        Create Deal
+                      <Button 
+                        variant="ghost" 
+                        size="lg"
+                        onClick={() => setCurrentView("analytics")}
+                      >
+                        View Analytics
                       </Button>
                     </div>
                   </div>
@@ -208,6 +237,16 @@ const AdminDashboard = () => {
             /* Partner Management View */
             <div className="space-y-8">
               <PartnerApprovalQueue />
+            </div>
+          ) : currentView === "deals" ? (
+            /* Deal Management View */
+            <div className="space-y-8">
+              <DealManagementTable />
+            </div>
+          ) : currentView === "analytics" ? (
+            /* Analytics View */
+            <div className="space-y-8">
+              <DealAnalytics />
             </div>
           ) : null}
         </div>
