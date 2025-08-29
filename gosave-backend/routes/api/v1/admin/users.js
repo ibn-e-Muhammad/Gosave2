@@ -10,11 +10,11 @@ const isValidEmail = (email) => {
 };
 
 const isValidRole = (role) => {
-  return ['viewer', 'member', 'partner', 'admin'].includes(role);
+  return ["viewer", "member", "partner", "admin"].includes(role);
 };
 
 const isValidStatus = (status) => {
-  return ['active', 'suspended'].includes(status);
+  return ["active", "suspended"].includes(status);
 };
 
 // GET /api/v1/admin/users - List all users with pagination and filters
@@ -26,16 +26,15 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
       status,
       role,
       search,
-      sortBy = 'created_at',
-      sortOrder = 'desc'
+      sortBy = "created_at",
+      sortOrder = "desc",
     } = req.query;
 
     const offset = (page - 1) * limit;
 
     // Build query with filters
-    let query = supabase
-      .from("users")
-      .select(`
+    let query = supabase.from("users").select(
+      `
         id,
         email,
         full_name,
@@ -50,15 +49,17 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
           price,
           duration_months
         )
-      `, { count: 'exact' });
+      `,
+      { count: "exact" }
+    );
 
     // Apply filters
     if (status && isValidStatus(status)) {
-      query = query.eq('status', status);
+      query = query.eq("status", status);
     }
 
     if (role && isValidRole(role)) {
-      query = query.eq('role', role);
+      query = query.eq("role", role);
     }
 
     if (search) {
@@ -66,9 +67,16 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
     }
 
     // Apply sorting
-    const validSortFields = ['created_at', 'updated_at', 'email', 'full_name', 'role', 'status'];
-    const sortField = validSortFields.includes(sortBy) ? sortBy : 'created_at';
-    const order = sortOrder.toLowerCase() === 'asc' ? true : false;
+    const validSortFields = [
+      "created_at",
+      "updated_at",
+      "email",
+      "full_name",
+      "role",
+      "status",
+    ];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : "created_at";
+    const order = sortOrder.toLowerCase() === "asc" ? true : false;
 
     query = query.order(sortField, { ascending: order });
 
@@ -123,9 +131,7 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
 router.get("/stats", verifyToken, requireAdmin, async (req, res) => {
   try {
     // Get comprehensive user statistics
-    const { data: users, error } = await supabase
-      .from("users")
-      .select(`
+    const { data: users, error } = await supabase.from("users").select(`
         id,
         role,
         status,
@@ -147,30 +153,34 @@ router.get("/stats", verifyToken, requireAdmin, async (req, res) => {
 
     // Calculate statistics
     const totalUsers = users.length;
-    const activeUsers = users.filter(u => u.status === 'active').length;
-    const suspendedUsers = users.filter(u => u.status === 'suspended').length;
-    const premiumUsers = users.filter(u => u.membership_id !== null).length;
+    const activeUsers = users.filter((u) => u.status === "active").length;
+    const suspendedUsers = users.filter((u) => u.status === "suspended").length;
+    const premiumUsers = users.filter((u) => u.membership_id !== null).length;
     const basicUsers = totalUsers - premiumUsers;
 
     // Role distribution
     const roleDistribution = {
-      viewer: users.filter(u => u.role === 'viewer').length,
-      member: users.filter(u => u.role === 'member').length,
-      partner: users.filter(u => u.role === 'partner').length,
-      admin: users.filter(u => u.role === 'admin').length,
+      viewer: users.filter((u) => u.role === "viewer").length,
+      member: users.filter((u) => u.role === "member").length,
+      partner: users.filter((u) => u.role === "partner").length,
+      admin: users.filter((u) => u.role === "admin").length,
     };
 
     // Recent registrations (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const recentRegistrations = users.filter(u => 
-      new Date(u.created_at) >= thirtyDaysAgo
+    const recentRegistrations = users.filter(
+      (u) => new Date(u.created_at) >= thirtyDaysAgo
     ).length;
 
     // Calculate monthly recurring revenue (MRR)
     const monthlyRevenue = users
-      .filter(u => u.memberships && u.memberships.price)
-      .reduce((total, u) => total + (u.memberships.price / (u.memberships.duration_months || 12)), 0);
+      .filter((u) => u.memberships && u.memberships.price)
+      .reduce(
+        (total, u) =>
+          total + u.memberships.price / (u.memberships.duration_months || 12),
+        0
+      );
 
     res.json({
       success: true,
@@ -185,11 +195,15 @@ router.get("/stats", verifyToken, requireAdmin, async (req, res) => {
         roleDistribution,
         growth: {
           recentRegistrations,
-          growthRate: totalUsers > 0 ? ((recentRegistrations / totalUsers) * 100).toFixed(2) : 0,
+          growthRate:
+            totalUsers > 0
+              ? ((recentRegistrations / totalUsers) * 100).toFixed(2)
+              : 0,
         },
         revenue: {
           monthlyRevenue: monthlyRevenue.toFixed(2),
-          averageRevenuePerUser: totalUsers > 0 ? (monthlyRevenue / totalUsers).toFixed(2) : 0,
+          averageRevenuePerUser:
+            totalUsers > 0 ? (monthlyRevenue / totalUsers).toFixed(2) : 0,
         },
       },
       message: "User statistics retrieved successfully",
@@ -210,7 +224,8 @@ router.get("/:id", verifyToken, requireAdmin, async (req, res) => {
 
     const { data: user, error } = await supabase
       .from("users")
-      .select(`
+      .select(
+        `
         id,
         email,
         full_name,
@@ -226,8 +241,9 @@ router.get("/:id", verifyToken, requireAdmin, async (req, res) => {
           duration_months,
           description
         )
-      `)
-      .eq('id', id)
+      `
+      )
+      .eq("id", id)
       .single();
 
     if (error) {
@@ -241,7 +257,8 @@ router.get("/:id", verifyToken, requireAdmin, async (req, res) => {
     // Get user's payment history
     const { data: payments, error: paymentsError } = await supabase
       .from("payments")
-      .select(`
+      .select(
+        `
         id,
         amount,
         currency,
@@ -251,9 +268,10 @@ router.get("/:id", verifyToken, requireAdmin, async (req, res) => {
         memberships (
           name
         )
-      `)
-      .eq('user_id', id)
-      .order('created_at', { ascending: false });
+      `
+      )
+      .eq("user_id", id)
+      .order("created_at", { ascending: false });
 
     // Transform user data
     const transformedUser = {
@@ -335,15 +353,17 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
     const { data: updatedUser, error } = await supabase
       .from("users")
       .update(updateData)
-      .eq('id', id)
-      .select(`
+      .eq("id", id)
+      .select(
+        `
         id,
         email,
         full_name,
         role,
         status,
         updated_at
-      `)
+      `
+      )
       .single();
 
     if (error) {
@@ -392,7 +412,7 @@ router.put("/:id/status", verifyToken, requireAdmin, async (req, res) => {
     }
 
     // Get current user to check if they're trying to suspend themselves
-    if (req.user.id === id && status === 'suspended') {
+    if (req.user.id === id && status === "suspended") {
       return res.status(400).json({
         success: false,
         error: "You cannot suspend your own account",
@@ -406,14 +426,16 @@ router.put("/:id/status", verifyToken, requireAdmin, async (req, res) => {
         status,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
-      .select(`
+      .eq("id", id)
+      .select(
+        `
         id,
         email,
         full_name,
         status,
         role
-      `)
+      `
+      )
       .single();
 
     if (error) {
@@ -424,8 +446,12 @@ router.put("/:id/status", verifyToken, requireAdmin, async (req, res) => {
       });
     }
 
-    const actionText = status === 'active' ? 'activated' : 'suspended';
-    console.log(`✅ Admin ${req.user.email} ${actionText} user ${updatedUser.email}${reason ? ` (Reason: ${reason})` : ''}`);
+    const actionText = status === "active" ? "activated" : "suspended";
+    console.log(
+      `✅ Admin ${req.user.email} ${actionText} user ${updatedUser.email}${
+        reason ? ` (Reason: ${reason})` : ""
+      }`
+    );
 
     res.json({
       success: true,
@@ -457,12 +483,13 @@ router.put("/:id/role", verifyToken, requireAdmin, async (req, res) => {
     if (!isValidRole(role)) {
       return res.status(400).json({
         success: false,
-        error: "Invalid role. Must be 'viewer', 'member', 'partner', or 'admin'",
+        error:
+          "Invalid role. Must be 'viewer', 'member', 'partner', or 'admin'",
       });
     }
 
     // Get current user to check if they're trying to demote themselves from admin
-    if (req.user.id === id && req.user.role === 'admin' && role !== 'admin') {
+    if (req.user.id === id && req.user.role === "admin" && role !== "admin") {
       return res.status(400).json({
         success: false,
         error: "You cannot change your own admin role",
@@ -476,14 +503,16 @@ router.put("/:id/role", verifyToken, requireAdmin, async (req, res) => {
         role,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
-      .select(`
+      .eq("id", id)
+      .select(
+        `
         id,
         email,
         full_name,
         role,
         status
-      `)
+      `
+      )
       .single();
 
     if (error) {
@@ -494,7 +523,9 @@ router.put("/:id/role", verifyToken, requireAdmin, async (req, res) => {
       });
     }
 
-    console.log(`✅ Admin ${req.user.email} changed user ${updatedUser.email} role to ${role}`);
+    console.log(
+      `✅ Admin ${req.user.email} changed user ${updatedUser.email} role to ${role}`
+    );
 
     res.json({
       success: true,
@@ -519,7 +550,7 @@ router.put("/:id/role", verifyToken, requireAdmin, async (req, res) => {
 // POST /api/v1/admin/users - Create new user (admin only)
 router.post("/", verifyToken, requireAdmin, async (req, res) => {
   try {
-    const { email, full_name, role = 'viewer', password } = req.body;
+    const { email, full_name, role = "viewer", password } = req.body;
 
     // Validation
     if (!email || !full_name) {
@@ -539,7 +570,8 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
     if (!isValidRole(role)) {
       return res.status(400).json({
         success: false,
-        error: "Invalid role. Must be 'viewer', 'member', 'partner', or 'admin'",
+        error:
+          "Invalid role. Must be 'viewer', 'member', 'partner', or 'admin'",
       });
     }
 
@@ -567,14 +599,15 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
     // Create user in Supabase Auth (if password provided)
     let authUserId = null;
     if (password) {
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: email.toLowerCase(),
-        password,
-        email_confirm: true,
-        user_metadata: {
-          full_name,
-        },
-      });
+      const { data: authData, error: authError } =
+        await supabase.auth.admin.createUser({
+          email: email.toLowerCase(),
+          password,
+          email_confirm: true,
+          user_metadata: {
+            full_name,
+          },
+        });
 
       if (authError) {
         console.error("Auth creation error:", authError);
@@ -595,16 +628,18 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
         email: email.toLowerCase(),
         full_name: full_name.trim(),
         role,
-        status: 'active',
+        status: "active",
       })
-      .select(`
+      .select(
+        `
         id,
         email,
         full_name,
         role,
         status,
         created_at
-      `)
+      `
+      )
       .single();
 
     if (error) {
@@ -615,7 +650,9 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
       });
     }
 
-    console.log(`✅ Admin ${req.user.email} created new user: ${newUser.email} (${newUser.role})`);
+    console.log(
+      `✅ Admin ${req.user.email} created new user: ${newUser.email} (${newUser.role})`
+    );
 
     res.status(201).json({
       success: true,

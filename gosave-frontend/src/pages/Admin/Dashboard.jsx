@@ -5,12 +5,13 @@ import Container from "../../components/UI/Container";
 import GlassCard from "../../components/UI/GlassCard";
 import Button from "../../components/UI/Button";
 import UserManagementTable from "../../components/Admin/Users/UserManagementTable";
+import PartnerApprovalQueue from "../../components/Admin/Partners/PartnerApprovalQueue";
 
 const AdminDashboard = () => {
   const { session } = useAuth();
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
-  const [currentView, setCurrentView] = useState('overview'); // 'overview' or 'users'
+  const [currentView, setCurrentView] = useState("overview"); // 'overview', 'users', or 'partners'
 
   useEffect(() => {
     const fetchAdminStats = async () => {
@@ -87,34 +88,44 @@ const AdminDashboard = () => {
             <p className="text-xl text-white/80 font-light">
               Platform overview and management
             </p>
-            
+
             {/* Navigation Tabs */}
             <div className="flex justify-center space-x-4 pt-6">
               <button
-                onClick={() => setCurrentView('overview')}
+                onClick={() => setCurrentView("overview")}
                 className={`px-6 py-3 rounded-lg transition-all duration-200 ${
-                  currentView === 'overview'
-                    ? 'bg-indigo-600 text-white shadow-lg'
-                    : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                  currentView === "overview"
+                    ? "bg-indigo-600 text-white shadow-lg"
+                    : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
                 }`}
               >
                 Overview
               </button>
               <button
-                onClick={() => setCurrentView('users')}
+                onClick={() => setCurrentView("users")}
                 className={`px-6 py-3 rounded-lg transition-all duration-200 ${
-                  currentView === 'users'
-                    ? 'bg-indigo-600 text-white shadow-lg'
-                    : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                  currentView === "users"
+                    ? "bg-indigo-600 text-white shadow-lg"
+                    : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
                 }`}
               >
                 User Management
+              </button>
+              <button
+                onClick={() => setCurrentView("partners")}
+                className={`px-6 py-3 rounded-lg transition-all duration-200 ${
+                  currentView === "partners"
+                    ? "bg-indigo-600 text-white shadow-lg"
+                    : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
+                }`}
+              >
+                Partner Management
               </button>
             </div>
           </div>
 
           {/* Render Current View */}
-          {currentView === 'overview' ? (
+          {currentView === "overview" ? (
             <>
               {/* Stats Grid - Clean Design */}
               <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
@@ -168,11 +179,14 @@ const AdminDashboard = () => {
                     </h2>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                      <Button 
-                        size="lg"
-                        onClick={() => setCurrentView('users')}
-                      >
+                      <Button size="lg" onClick={() => setCurrentView("users")}>
                         Manage Users
+                      </Button>
+                      <Button
+                        size="lg"
+                        onClick={() => setCurrentView("partners")}
+                      >
+                        Manage Partners
                       </Button>
                       <Button variant="ghost" size="lg">
                         Approve Partners
@@ -185,12 +199,17 @@ const AdminDashboard = () => {
                 </GlassCard>
               </div>
             </>
-          ) : (
+          ) : currentView === "users" ? (
             /* User Management View */
             <div className="space-y-8">
               <UserManagementTable />
             </div>
-          )}
+          ) : currentView === "partners" ? (
+            /* Partner Management View */
+            <div className="space-y-8">
+              <PartnerApprovalQueue />
+            </div>
+          ) : null}
         </div>
       </Container>
     </div>

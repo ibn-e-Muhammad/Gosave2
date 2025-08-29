@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../../hooks/useAuth';
-import UserEditModal from './UserEditModal';
-import UserStatsCards from './UserStatsCards';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../../hooks/useAuth";
+import UserEditModal from "./UserEditModal";
+import UserStatsCards from "./UserStatsCards";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const UserManagementTable = () => {
   const { session } = useAuth();
@@ -13,14 +13,14 @@ const UserManagementTable = () => {
   const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
-  
+
   // Pagination and filtering
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filters, setFilters] = useState({
-    status: '',
-    role: '',
-    search: ''
+    status: "",
+    role: "",
+    search: "",
   });
 
   const fetchUsers = async (page = 1) => {
@@ -28,18 +28,21 @@ const UserManagementTable = () => {
       setLoading(true);
       const queryParams = new URLSearchParams({
         page: page.toString(),
-        limit: '20',
+        limit: "20",
         ...(filters.status && { status: filters.status }),
         ...(filters.role && { role: filters.role }),
-        ...(filters.search && { search: filters.search })
+        ...(filters.search && { search: filters.search }),
       });
 
-      const response = await fetch(`${API_URL}/api/v1/admin/users?${queryParams}`, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${API_URL}/api/v1/admin/users?${queryParams}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const data = await response.json();
 
@@ -49,11 +52,11 @@ const UserManagementTable = () => {
         setTotalPages(data.pagination.totalPages);
         setError(null);
       } else {
-        setError(data.error || 'Failed to fetch users');
+        setError(data.error || "Failed to fetch users");
       }
     } catch (err) {
-      console.error('Error fetching users:', err);
-      setError('Failed to connect to server');
+      console.error("Error fetching users:", err);
+      setError("Failed to connect to server");
     } finally {
       setLoading(false);
     }
@@ -64,7 +67,7 @@ const UserManagementTable = () => {
       const response = await fetch(`${API_URL}/api/v1/admin/users/stats`, {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
@@ -74,7 +77,7 @@ const UserManagementTable = () => {
         setStats(data.data);
       }
     } catch (err) {
-      console.error('Error fetching stats:', err);
+      console.error("Error fetching stats:", err);
     }
   };
 
@@ -86,68 +89,78 @@ const UserManagementTable = () => {
   }, [session?.access_token, filters]);
 
   const handleFilterChange = (filterType, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [filterType]: value
+      [filterType]: value,
     }));
     setCurrentPage(1);
   };
 
   const handleStatusChange = async (userId, newStatus) => {
     try {
-      const response = await fetch(`${API_URL}/api/v1/admin/users/${userId}/status`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      const response = await fetch(
+        `${API_URL}/api/v1/admin/users/${userId}/status`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
 
       const data = await response.json();
 
       if (data.success) {
         // Update user in local state
-        setUsers(prev => prev.map(user => 
-          user.id === userId ? { ...user, status: newStatus } : user
-        ));
+        setUsers((prev) =>
+          prev.map((user) =>
+            user.id === userId ? { ...user, status: newStatus } : user
+          )
+        );
         // Refresh stats
         fetchStats();
       } else {
-        alert('Failed to update user status: ' + data.error);
+        alert("Failed to update user status: " + data.error);
       }
     } catch (err) {
-      console.error('Error updating status:', err);
-      alert('Failed to update user status');
+      console.error("Error updating status:", err);
+      alert("Failed to update user status");
     }
   };
 
   const handleRoleChange = async (userId, newRole) => {
     try {
-      const response = await fetch(`${API_URL}/api/v1/admin/users/${userId}/role`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ role: newRole }),
-      });
+      const response = await fetch(
+        `${API_URL}/api/v1/admin/users/${userId}/role`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ role: newRole }),
+        }
+      );
 
       const data = await response.json();
 
       if (data.success) {
         // Update user in local state
-        setUsers(prev => prev.map(user => 
-          user.id === userId ? { ...user, role: newRole } : user
-        ));
+        setUsers((prev) =>
+          prev.map((user) =>
+            user.id === userId ? { ...user, role: newRole } : user
+          )
+        );
         // Refresh stats
         fetchStats();
       } else {
-        alert('Failed to update user role: ' + data.error);
+        alert("Failed to update user role: " + data.error);
       }
     } catch (err) {
-      console.error('Error updating role:', err);
-      alert('Failed to update user role');
+      console.error("Error updating role:", err);
+      alert("Failed to update user role");
     }
   };
 
@@ -157,36 +170,38 @@ const UserManagementTable = () => {
   };
 
   const handleUserUpdated = (updatedUser) => {
-    setUsers(prev => prev.map(user => 
-      user.id === updatedUser.id ? { ...user, ...updatedUser } : user
-    ));
+    setUsers((prev) =>
+      prev.map((user) =>
+        user.id === updatedUser.id ? { ...user, ...updatedUser } : user
+      )
+    );
     setShowEditModal(false);
     setSelectedUser(null);
   };
 
   const getStatusBadgeClass = (status) => {
     switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 border border-green-200';
-      case 'suspended':
-        return 'bg-red-100 text-red-800 border border-red-200';
+      case "active":
+        return "bg-green-100 text-green-800 border border-green-200";
+      case "suspended":
+        return "bg-red-100 text-red-800 border border-red-200";
       default:
-        return 'bg-gray-100 text-gray-800 border border-gray-200';
+        return "bg-gray-100 text-gray-800 border border-gray-200";
     }
   };
 
   const getRoleBadgeClass = (role) => {
     switch (role) {
-      case 'admin':
-        return 'bg-purple-100 text-purple-800 border border-purple-200';
-      case 'partner':
-        return 'bg-blue-100 text-blue-800 border border-blue-200';
-      case 'member':
-        return 'bg-indigo-100 text-indigo-800 border border-indigo-200';
-      case 'viewer':
-        return 'bg-gray-100 text-gray-800 border border-gray-200';
+      case "admin":
+        return "bg-purple-100 text-purple-800 border border-purple-200";
+      case "partner":
+        return "bg-blue-100 text-blue-800 border border-blue-200";
+      case "member":
+        return "bg-indigo-100 text-indigo-800 border border-indigo-200";
+      case "viewer":
+        return "bg-gray-100 text-gray-800 border border-gray-200";
       default:
-        return 'bg-gray-100 text-gray-800 border border-gray-200';
+        return "bg-gray-100 text-gray-800 border border-gray-200";
     }
   };
 
@@ -215,7 +230,7 @@ const UserManagementTable = () => {
               type="text"
               placeholder="Name or email..."
               value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
+              onChange={(e) => handleFilterChange("search", e.target.value)}
               className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
@@ -227,7 +242,7 @@ const UserManagementTable = () => {
             </label>
             <select
               value={filters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
+              onChange={(e) => handleFilterChange("status", e.target.value)}
               className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">All Statuses</option>
@@ -243,7 +258,7 @@ const UserManagementTable = () => {
             </label>
             <select
               value={filters.role}
-              onChange={(e) => handleFilterChange('role', e.target.value)}
+              onChange={(e) => handleFilterChange("role", e.target.value)}
               className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">All Roles</option>
@@ -257,7 +272,7 @@ const UserManagementTable = () => {
           {/* Clear Filters */}
           <div className="flex items-end">
             <button
-              onClick={() => setFilters({ status: '', role: '', search: '' })}
+              onClick={() => setFilters({ status: "", role: "", search: "" })}
               className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200"
             >
               Clear Filters
@@ -304,18 +319,27 @@ const UserManagementTable = () => {
             </thead>
             <tbody className="divide-y divide-white/10">
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-white/5 transition-colors duration-200">
+                <tr
+                  key={user.id}
+                  className="hover:bg-white/5 transition-colors duration-200"
+                >
                   <td className="px-6 py-4">
                     <div>
-                      <div className="text-sm font-medium text-white">{user.fullName}</div>
+                      <div className="text-sm font-medium text-white">
+                        {user.fullName}
+                      </div>
                       <div className="text-sm text-gray-400">{user.email}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <select
                       value={user.role}
-                      onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                      className={`px-3 py-1 text-xs font-medium rounded-full ${getRoleBadgeClass(user.role)} bg-transparent`}
+                      onChange={(e) =>
+                        handleRoleChange(user.id, e.target.value)
+                      }
+                      className={`px-3 py-1 text-xs font-medium rounded-full ${getRoleBadgeClass(
+                        user.role
+                      )} bg-transparent`}
                     >
                       <option value="viewer">Viewer</option>
                       <option value="member">Member</option>
@@ -325,16 +349,25 @@ const UserManagementTable = () => {
                   </td>
                   <td className="px-6 py-4">
                     <button
-                      onClick={() => handleStatusChange(user.id, user.status === 'active' ? 'suspended' : 'active')}
-                      className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${getStatusBadgeClass(user.status)}`}
+                      onClick={() =>
+                        handleStatusChange(
+                          user.id,
+                          user.status === "active" ? "suspended" : "active"
+                        )
+                      }
+                      className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${getStatusBadgeClass(
+                        user.status
+                      )}`}
                     >
                       {user.status}
                     </button>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-300">
-                    {user.membershipPlan || 'Free'}
+                    {user.membershipPlan || "Free"}
                     {user.membershipPrice && (
-                      <div className="text-xs text-gray-400">${user.membershipPrice}/mo</div>
+                      <div className="text-xs text-gray-400">
+                        ${user.membershipPrice}/mo
+                      </div>
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-300">

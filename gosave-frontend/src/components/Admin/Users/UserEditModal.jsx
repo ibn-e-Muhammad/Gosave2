@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../../hooks/useAuth';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../../hooks/useAuth";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const UserEditModal = ({ user, onClose, onUserUpdated }) => {
   const { session } = useAuth();
   const [formData, setFormData] = useState({
-    email: user?.email || '',
-    fullName: user?.fullName || '',
+    email: user?.email || "",
+    fullName: user?.fullName || "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -15,17 +15,17 @@ const UserEditModal = ({ user, onClose, onUserUpdated }) => {
   useEffect(() => {
     if (user) {
       setFormData({
-        email: user.email || '',
-        fullName: user.fullName || '',
+        email: user.email || "",
+        fullName: user.fullName || "",
       });
     }
   }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -36,10 +36,10 @@ const UserEditModal = ({ user, onClose, onUserUpdated }) => {
 
     try {
       const response = await fetch(`${API_URL}/api/v1/admin/users/${user.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
           Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: formData.email.trim(),
@@ -52,11 +52,11 @@ const UserEditModal = ({ user, onClose, onUserUpdated }) => {
       if (data.success) {
         onUserUpdated(data.data);
       } else {
-        setError(data.error || 'Failed to update user');
+        setError(data.error || "Failed to update user");
       }
     } catch (err) {
-      console.error('Error updating user:', err);
-      setError('Failed to connect to server');
+      console.error("Error updating user:", err);
+      setError("Failed to connect to server");
     } finally {
       setLoading(false);
     }
@@ -74,8 +74,18 @@ const UserEditModal = ({ user, onClose, onUserUpdated }) => {
               onClick={onClose}
               className="text-gray-400 hover:text-white transition-colors duration-200"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -88,7 +98,10 @@ const UserEditModal = ({ user, onClose, onUserUpdated }) => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-2">
+              <label
+                htmlFor="fullName"
+                className="block text-sm font-medium text-gray-300 mb-2"
+              >
                 Full Name
               </label>
               <input
@@ -104,7 +117,10 @@ const UserEditModal = ({ user, onClose, onUserUpdated }) => {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-300 mb-2"
+              >
                 Email Address
               </label>
               <input
@@ -119,32 +135,36 @@ const UserEditModal = ({ user, onClose, onUserUpdated }) => {
             </div>
 
             <div className="bg-white/5 rounded-lg p-3">
-              <h4 className="text-sm font-medium text-gray-300 mb-2">Current Details</h4>
+              <h4 className="text-sm font-medium text-gray-300 mb-2">
+                Current Details
+              </h4>
               <div className="space-y-1 text-sm">
                 <p className="text-gray-400">
-                  <span className="font-medium">Role:</span> 
+                  <span className="font-medium">Role:</span>
                   <span className="ml-2 px-2 py-1 bg-purple-500/20 text-purple-300 rounded">
                     {user.role}
                   </span>
                 </p>
                 <p className="text-gray-400">
-                  <span className="font-medium">Status:</span> 
-                  <span className={`ml-2 px-2 py-1 rounded ${
-                    user.status === 'active' 
-                      ? 'bg-green-500/20 text-green-300' 
-                      : 'bg-red-500/20 text-red-300'
-                  }`}>
+                  <span className="font-medium">Status:</span>
+                  <span
+                    className={`ml-2 px-2 py-1 rounded ${
+                      user.status === "active"
+                        ? "bg-green-500/20 text-green-300"
+                        : "bg-red-500/20 text-red-300"
+                    }`}
+                  >
                     {user.status}
                   </span>
                 </p>
                 <p className="text-gray-400">
-                  <span className="font-medium">Membership:</span> 
+                  <span className="font-medium">Membership:</span>
                   <span className="ml-2 text-white">
-                    {user.membershipPlan || 'Free'}
+                    {user.membershipPlan || "Free"}
                   </span>
                 </p>
                 <p className="text-gray-400">
-                  <span className="font-medium">Joined:</span> 
+                  <span className="font-medium">Joined:</span>
                   <span className="ml-2 text-white">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </span>
@@ -172,7 +192,7 @@ const UserEditModal = ({ user, onClose, onUserUpdated }) => {
                     Saving...
                   </div>
                 ) : (
-                  'Save Changes'
+                  "Save Changes"
                 )}
               </button>
             </div>
