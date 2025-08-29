@@ -3,6 +3,182 @@ const { supabase } = require("../../../config/supabase");
 const { verifyToken } = require("../../../middleware/auth");
 const router = express.Router();
 
+// Email validation helper
+const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+// Password validation helper
+const isValidPassword = (password) => {
+  // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
+  return passwordRegex.test(password);
+};
+
+// POST /api/v1/auth/register - Registration endpoint
+router.post("/register", async (req, res) => {
+  try {
+    const { email, password, full_name, phone } = req.body;
+
+    // Validation
+    if (!email || !password || !full_name) {
+      return res.status(400).json({
+        success: false,
+        error: "Email, password, and full name are required",
+      });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        error: "Please enter a valid email address",
+      });
+    }
+
+    if (!isValidPassword(password)) {
+      return res.status(400).json({
+        success: false,
+        error:
+          "Password must be at least 8 characters with uppercase, lowercase, and number",
+      });
+    }
+
+    // Check if user already exists in our database
+    const { data: existingUser, error: checkError } = await supabase
+      .from("users")
+      .select("email")
+      .eq("email", email.toLowerCase())
+      .single();
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        error: "An account with this email already exists",
+      });
+    }
+
+    // Create user in Supabase Auth
+    const { data: authData, error: authError } =
+      await supabase.auth.admin.createUser({
+        email: email.toLowerCase(),
+        password,
+        user_metadata: {
+          full_name,
+          phone: phone || null,
+        },
+        email_confirm: false, // Require email verification
+      });
+
+    if (authError) {
+      console.error("Auth creation error:", authError);
+
+      // Handle specific Supabase errors
+      if (authError.message.includes("already registered")) {
+        return res.status(409).json({
+          success: false,
+          error: "An account with this email already exists",
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        error: authError.message || "Failed to create account",
+      });
+    }
+
+    if (!authData.user) {
+      return res.status(500).json({
+        success: false,
+        error: "Failed to create user account",
+      });
+    }
+
+    // Create user record in our database
+    const { data: dbUser, error: dbError } = await supabase
+      .from("users")
+      .insert({
+        email: email.toLowerCase(),
+        full_name,
+        phone: phone || null,
+        role: "viewer", // Default role
+        status: "active",
+      })
+      .select()
+      .single();
+
+    if (dbError) {
+      console.error("Database user creation error:", dbError);
+
+      // If database creation fails, clean up auth user
+      try {
+        await supabase.auth.admin.deleteUser(authData.user.id);
+      } catch (cleanupError) {
+        console.error("Failed to cleanup auth user:", cleanupError);
+      }
+
+      return res.status(500).json({
+        success: false,
+        error: "Failed to create user profile",
+      });
+    }
+
+    // Send verification email
+    const { data: linkData, error: emailError } =
+      await supabase.auth.admin.generateLink({
+        type: "signup",
+        email: email.toLowerCase(),
+      });
+
+    if (emailError) {
+      console.error("Email verification error:", emailError);
+      // Don't fail registration if email sending fails
+    } else {
+      console.log("✅ Verification email link generated successfully");
+      console.log(
+        "📧 Email verification link:",
+        linkData?.properties?.action_link
+      );
+
+      // Development workaround: Log verification link for manual testing
+      if (process.env.NODE_ENV === "development") {
+        console.log("\n🔧 DEVELOPMENT WORKAROUND:");
+        console.log("📋 Copy this link to verify the user manually:");
+        console.log("🔗", linkData?.properties?.action_link);
+        console.log("📧 User email:", email.toLowerCase());
+        console.log("👤 User name:", full_name);
+        console.log(
+          "\n📝 Or verify manually in Supabase Dashboard > Authentication > Users"
+        );
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      data: {
+        user: {
+          id: dbUser.id,
+          email: dbUser.email,
+          full_name: dbUser.full_name,
+          role: dbUser.role,
+          status: dbUser.status,
+        },
+        message:
+          "Account created successfully. Please check your email to verify your account.",
+        email_verification_required: true,
+      },
+      message:
+        "Registration successful. Please verify your email to complete setup.",
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({
+      success: false,
+      error: "An unexpected error occurred during registration",
+    });
+  }
+});
+
 // POST /api/v1/auth/login - Login endpoint
 router.post("/login", async (req, res) => {
   try {
@@ -74,6 +250,15 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({
         success: false,
         error: "Account is suspended",
+      });
+    }
+
+    // Check if email is verified
+    if (!authData.user.email_confirmed_at) {
+      return res.status(401).json({
+        success: false,
+        error: "Please verify your email address before logging in",
+        email_verification_required: true,
       });
     }
 
@@ -158,6 +343,197 @@ router.get("/me", verifyToken, async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Failed to fetch user data",
+    });
+  }
+});
+
+// POST /api/v1/auth/resend-verification - Resend verification email
+router.post("/resend-verification", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: "Email is required",
+      });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        error: "Please enter a valid email address",
+      });
+    }
+
+    // Check if user exists in our database
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("email")
+      .eq("email", email.toLowerCase())
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).json({
+        success: false,
+        error: "No account found with this email address",
+      });
+    }
+
+    // Send verification email
+    const { data: linkData, error: emailError } =
+      await supabase.auth.admin.generateLink({
+        type: "signup",
+        email: email.toLowerCase(),
+      });
+
+    if (emailError) {
+      console.error("Email verification error:", emailError);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to send verification email",
+      });
+    } else {
+      console.log("✅ Resend verification email link generated successfully");
+      console.log(
+        "📧 Email verification link:",
+        linkData?.properties?.action_link
+      );
+    }
+
+    res.json({
+      success: true,
+      message: "Verification email sent successfully",
+    });
+  } catch (error) {
+    console.error("Resend verification error:", error);
+    res.status(500).json({
+      success: false,
+      error: "An unexpected error occurred",
+    });
+  }
+});
+
+// GET /api/v1/auth/verify-email - Handle email verification callback
+router.get("/verify-email", async (req, res) => {
+  try {
+    const { token, type } = req.query;
+
+    if (!token || type !== "signup") {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid verification link",
+      });
+    }
+
+    // Verify the token with Supabase
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: token,
+      type: "signup",
+    });
+
+    if (error) {
+      console.error("Email verification error:", error);
+      return res.status(400).json({
+        success: false,
+        error: "Invalid or expired verification link",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Email verified successfully. You can now log in.",
+    });
+  } catch (error) {
+    console.error("Email verification error:", error);
+    res.status(500).json({
+      success: false,
+      error: "An unexpected error occurred during verification",
+    });
+  }
+});
+
+// POST /api/v1/auth/admin/verify-user - Admin endpoint to manually verify users (development)
+router.post("/admin/verify-user", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: "Email is required",
+      });
+    }
+
+    // Only allow in development mode
+    if (process.env.NODE_ENV !== "development") {
+      return res.status(403).json({
+        success: false,
+        error: "Admin verification only available in development mode",
+      });
+    }
+
+    // Find user in auth system
+    const { data: users, error: listError } =
+      await supabase.auth.admin.listUsers();
+
+    if (listError) {
+      console.error("Error listing users:", listError);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to find user",
+      });
+    }
+
+    const user = users.users.find((u) => u.email === email.toLowerCase());
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+
+    if (user.email_confirmed_at) {
+      return res.status(200).json({
+        success: true,
+        message: "User is already verified",
+        data: {
+          email: user.email,
+          verified_at: user.email_confirmed_at,
+        },
+      });
+    }
+
+    // Manually verify the user
+    const { data: updateData, error: updateError } =
+      await supabase.auth.admin.updateUserById(user.id, {
+        email_confirm: true,
+      });
+
+    if (updateError) {
+      console.error("Error verifying user:", updateError);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to verify user",
+      });
+    }
+
+    console.log(`✅ Admin verification: ${email} manually verified`);
+
+    res.json({
+      success: true,
+      message: "User verified successfully",
+      data: {
+        email: updateData.user.email,
+        verified_at: updateData.user.email_confirmed_at,
+      },
+    });
+  } catch (error) {
+    console.error("Admin verification error:", error);
+    res.status(500).json({
+      success: false,
+      error: "An unexpected error occurred during verification",
     });
   }
 });

@@ -15,6 +15,9 @@ import Partners from "./pages/Partners";
 import Membership from "./pages/Membership";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import EmailVerification from "./pages/EmailVerification";
+import AdminVerify from "./pages/AdminVerify";
 import AdminDashboard from "./pages/Admin/Dashboard";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -66,6 +69,9 @@ function App() {
               <Route path="/partners" element={<Partners />} />
               <Route path="/membership" element={<Membership />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/verify-email" element={<EmailVerification />} />
+              <Route path="/admin/verify" element={<AdminVerify />} />
 
               {/* Protected Routes - Require Authentication */}
               <Route

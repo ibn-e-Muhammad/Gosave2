@@ -136,12 +136,79 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const register = async (email, password, full_name, phone = null) => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_URL || "http://localhost:5000"
+        }/api/v1/auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email.toLowerCase(),
+            password,
+            full_name: full_name.trim(),
+            phone: phone?.trim() || null,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        return { success: true, data };
+      } else {
+        return { success: false, error: data.error };
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      return {
+        success: false,
+        error: "An unexpected error occurred during registration",
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resendVerification = async (email) => {
+    try {
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_URL || "http://localhost:5000"
+        }/api/v1/auth/resend-verification`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email.toLowerCase(),
+          }),
+        }
+      );
+
+      const data = await response.json();
+      return { success: data.success, error: data.error };
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      return { success: false, error: "Failed to resend verification email" };
+    }
+  };
+
   const value = {
     user,
     session,
     loading,
     login,
     logout,
+    register,
+    resendVerification,
     isAuthenticated: !!user,
     isAdmin: user?.role === "admin",
     isMember: user?.role === "member",

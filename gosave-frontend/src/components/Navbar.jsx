@@ -150,12 +150,20 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <Link
-                to="/login"
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-royal-gold text-white hover:bg-royal-gold-dark transition-colors duration-320"
-              >
-                <User size={20} />
-              </Link>
+              <div className="flex items-center space-x-3">
+                <Link to="/login">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white border-white/30 hover:bg-white/10"
+                  >
+                    Login
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button size="sm">Sign Up</Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -179,6 +187,26 @@ const Navbar = () => {
                   {item.name}
                 </Link>
               ))}
+
+              {/* Mobile Auth Links */}
+              {!isAuthenticated && (
+                <div className="pt-2 border-t border-white/20 mt-2 space-y-2">
+                  <Link
+                    to="/login"
+                    className="block px-4 py-2 text-sm font-sans font-medium text-white hover:text-royal-gold hover:bg-white/5 rounded-lg transition-colors duration-320"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="block px-4 py-2 text-sm font-sans font-medium text-royal-gold bg-royal-gold/10 hover:bg-royal-gold/20 rounded-lg transition-colors duration-320"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}
