@@ -166,9 +166,11 @@ const DealManagementTable = () => {
   const handleDealUpdated = (updatedDeal) => {
     if (selectedDeal) {
       // Update existing deal
-      setDeals(prev => prev.map(deal => 
-        deal.id === updatedDeal.id ? { ...deal, ...updatedDeal } : deal
-      ));
+      setDeals((prev) =>
+        prev.map((deal) =>
+          deal.id === updatedDeal.id ? { ...deal, ...updatedDeal } : deal
+        )
+      );
     } else {
       // Add new deal
       fetchDeals(); // Refresh the entire list to get properly formatted data
@@ -267,7 +269,7 @@ const DealManagementTable = () => {
               Manage and monitor all platform deals
             </p>
           </div>
-          <button 
+          <button
             onClick={handleCreateDeal}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
           >

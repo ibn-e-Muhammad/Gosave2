@@ -19,6 +19,7 @@ import Register from "./pages/Register";
 import EmailVerification from "./pages/EmailVerification";
 import AdminVerify from "./pages/AdminVerify";
 import AdminDashboard from "./pages/Admin/Dashboard";
+import PartnerDashboard from "./components/Partner/PartnerDashboard";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -92,6 +93,16 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["admin"]}>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Partner Only Routes */}
+              <Route
+                path="/partner/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={["partner", "admin"]}>
+                    <PartnerDashboard />
                   </ProtectedRoute>
                 }
               />

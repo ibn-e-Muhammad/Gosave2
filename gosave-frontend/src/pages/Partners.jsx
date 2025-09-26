@@ -2,10 +2,14 @@ import { useState, useEffect } from "react";
 import Container from "../components/UI/Container";
 import GlassCard from "../components/UI/GlassCard";
 import Button from "../components/UI/Button";
+import PartnerRegistrationModal from "../components/Partner/PartnerRegistrationModal";
+import ApplicationStatusChecker from "../components/Partner/ApplicationStatusChecker";
 
 const Partners = () => {
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [showStatusChecker, setShowStatusChecker] = useState(false);
 
   useEffect(() => {
     const fetchPartners = async () => {
@@ -96,7 +100,7 @@ const Partners = () => {
             </div>
           </div>
 
-          {/* CTA Section - Minimalistic */}
+          {/* CTA Section - Enhanced */}
           <div className="text-center">
             <GlassCard className="p-12 max-w-2xl mx-auto">
               <div className="space-y-6">
@@ -106,14 +110,62 @@ const Partners = () => {
                 <p className="text-white/80 leading-relaxed">
                   Join our network and reach more customers with GoSave
                 </p>
-                <Button size="lg" className="px-8">
-                  Register as Partner
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button
+                    size="lg"
+                    className="px-8"
+                    onClick={() => setShowRegistrationModal(true)}
+                  >
+                    Register as Partner
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    className="px-8"
+                    onClick={() => setShowStatusChecker(true)}
+                  >
+                    Check Application Status
+                  </Button>
+                </div>
               </div>
             </GlassCard>
           </div>
         </div>
       </Container>
+
+      {/* Modals */}
+      <PartnerRegistrationModal
+        isOpen={showRegistrationModal}
+        onClose={() => setShowRegistrationModal(false)}
+      />
+
+      {showStatusChecker && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="relative">
+              <button
+                onClick={() => setShowStatusChecker(false)}
+                className="absolute top-4 right-4 z-10 text-white/60 hover:text-white transition-colors bg-black/20 rounded-full p-2"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+              <ApplicationStatusChecker />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

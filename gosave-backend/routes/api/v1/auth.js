@@ -538,4 +538,259 @@ router.post("/admin/verify-user", async (req, res) => {
   }
 });
 
+// ============================================
+// USER PROFILE & REDEMPTION ENDPOINTS (Week 4)
+// ============================================
+
+// GET /api/v1/auth/profile - Get full user profile with redemption info
+router.get("/profile", verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get user details with membership info
+    const { data: user, error } = await supabase
+      .from("users")
+      .select(
+        `
+        id,
+        full_name,
+        email,
+        phone,
+        role,
+        membership_expires_at,
+        membership_auto_renew,
+        last_redemption_at,
+        created_at,
+        updated_at
+      `
+      )
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("Database error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch user profile",
+      });
+    }
+
+    // Get redemption statistics
+    const { data: redemptionStats, error: statsError } = await supabase
+      .from("redemptions")
+      .select("id, discount_amount, redeemed_at")
+      .eq("user_id", userId);
+
+    if (statsError) {
+      console.error("Stats error:", statsError);
+    }
+
+    // Calculate redemption stats
+    const totalRedemptions = redemptionStats ? redemptionStats.length : 0;
+    const totalSavings = redemptionStats
+      ? redemptionStats.reduce(
+          (sum, r) => sum + (parseFloat(r.discount_amount) || 0),
+          0
+        )
+      : 0;
+
+    // Check membership status
+    const isValidMember =
+      user.role === "member" ||
+      user.role === "premium" ||
+      user.role === "admin";
+    const isExpired =
+      user.membership_expires_at &&
+      new Date(user.membership_expires_at) < new Date();
+
+    res.json({
+      success: true,
+      data: {
+        id: user.id,
+        fullName: user.full_name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        membershipStatus: {
+          tier: user.role,
+          isActive: isValidMember && !isExpired,
+          isExpired: isExpired,
+          expiresAt: user.membership_expires_at,
+          autoRenew: user.membership_auto_renew,
+        },
+        redemptionStats: {
+          totalRedemptions,
+          totalSavings: parseFloat(totalSavings.toFixed(2)),
+          lastRedemption: user.last_redemption_at,
+        },
+        accountInfo: {
+          memberSince: user.created_at,
+          lastUpdated: user.updated_at,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch user profile",
+    });
+  }
+});
+
+// GET /api/v1/auth/qr-code - Generate user QR code for redemption
+router.get("/qr-code", verifyToken, async (req, res) => {
+  try {
+    const user = req.user;
+
+    // For now, we'll return the user ID and basic info that can be used for QR generation
+    // In a real app, you might want to use a QR code library to generate an actual QR image
+    const qrData = {
+      userId: user.id,
+      name: user.full_name,
+      email: user.email,
+      role: user.role,
+      timestamp: new Date().toISOString(),
+      // Add a simple verification hash (in production, use proper encryption)
+      verification: Buffer.from(`${user.id}:${user.email}:gosave`).toString(
+        "base64"
+      ),
+    };
+
+    res.json({
+      success: true,
+      data: {
+        qrData: JSON.stringify(qrData),
+        displayInfo: {
+          userId: user.id,
+          name: user.full_name,
+          membershipTier: user.role,
+        },
+        instructions: "Show this QR code to partner for deal redemption",
+      },
+    });
+  } catch (error) {
+    console.error("Error generating QR code:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate QR code",
+    });
+  }
+});
+
+// POST /api/v1/auth/decode-qr - Decode and validate QR code (Partner use)
+router.post("/decode-qr", verifyToken, async (req, res) => {
+  try {
+    const partnerUser = req.user;
+    const { qrData } = req.body;
+
+    // Verify the requester is a partner
+    if (partnerUser.role !== "partner" && partnerUser.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        error: "Only partners can decode QR codes",
+      });
+    }
+
+    if (!qrData) {
+      return res.status(400).json({
+        success: false,
+        error: "QR data is required",
+      });
+    }
+
+    let parsedData;
+    try {
+      parsedData = JSON.parse(qrData);
+    } catch (parseError) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid QR code format",
+      });
+    }
+
+    // Basic validation of QR data
+    if (!parsedData.userId || !parsedData.email || !parsedData.verification) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid QR code data",
+      });
+    }
+
+    // Verify the QR code (simple verification - in production use proper encryption)
+    const expectedVerification = Buffer.from(
+      `${parsedData.userId}:${parsedData.email}:gosave`
+    ).toString("base64");
+    if (parsedData.verification !== expectedVerification) {
+      return res.status(400).json({
+        success: false,
+        error: "QR code verification failed",
+      });
+    }
+
+    // Get current user data
+    const { data: user, error } = await supabase
+      .from("users")
+      .select(
+        `
+        id,
+        full_name,
+        email,
+        role,
+        membership_expires_at,
+        last_redemption_at
+      `
+      )
+      .eq("id", parsedData.userId)
+      .single();
+
+    if (error || !user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+
+    // Check if QR is too old (optional - 10 minutes expiry)
+    const qrAge = new Date() - new Date(parsedData.timestamp);
+    if (qrAge > 10 * 60 * 1000) {
+      // 10 minutes in milliseconds
+      return res.status(400).json({
+        success: false,
+        error: "QR code has expired. Please generate a new one.",
+      });
+    }
+
+    // Check membership status
+    const isValidMember =
+      user.role === "member" ||
+      user.role === "premium" ||
+      user.role === "admin";
+    const isExpired =
+      user.membership_expires_at &&
+      new Date(user.membership_expires_at) < new Date();
+
+    res.json({
+      success: true,
+      data: {
+        id: user.id,
+        name: user.full_name,
+        email: user.email,
+        membershipTier: user.role,
+        membershipExpires: user.membership_expires_at,
+        isValidMember: isValidMember && !isExpired,
+        isExpired: isExpired,
+        lastRedemption: user.last_redemption_at,
+        qrGeneratedAt: parsedData.timestamp,
+      },
+    });
+  } catch (error) {
+    console.error("Error decoding QR code:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to decode QR code",
+    });
+  }
+});
+
 module.exports = router;

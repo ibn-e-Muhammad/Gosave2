@@ -779,4 +779,217 @@ router.get("/admin/categories", verifyToken, requireAdmin, async (req, res) => {
   }
 });
 
+// ============================================
+// DEAL REDEMPTION ENDPOINTS (Week 4)
+// ============================================
+
+// POST /api/v1/deals/:dealId/check-eligibility - Check if user can redeem a deal
+router.post("/:dealId/check-eligibility", verifyToken, async (req, res) => {
+  try {
+    const { dealId } = req.params;
+    const userId = req.user.id;
+
+    // Call the database function to check eligibility
+    const { data, error } = await supabase.rpc(
+      "check_user_redemption_eligibility",
+      {
+        p_user_id: userId,
+        p_deal_id: dealId,
+      }
+    );
+
+    if (error) {
+      console.error("Database error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to check eligibility",
+      });
+    }
+
+    const eligibilityResult = data;
+
+    if (eligibilityResult.eligible) {
+      res.json({
+        success: true,
+        eligible: true,
+        data: eligibilityResult,
+      });
+    } else {
+      res.json({
+        success: true,
+        eligible: false,
+        reason: eligibilityResult.reason,
+      });
+    }
+  } catch (error) {
+    console.error("Error checking eligibility:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to check eligibility",
+    });
+  }
+});
+
+// POST /api/v1/deals/:dealId/redeem - Process deal redemption (Partner Only)
+router.post("/:dealId/redeem", verifyToken, async (req, res) => {
+  try {
+    const { dealId } = req.params;
+    const partnerUser = req.user;
+    const {
+      userId,
+      discountAmount,
+      originalAmount,
+      redemptionMethod = "manual",
+      notes,
+    } = req.body;
+
+    // Verify the requester is a partner
+    if (partnerUser.role !== "partner" && partnerUser.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        error: "Only partners can process redemptions",
+      });
+    }
+
+    // Get partner details
+    const { data: partnerData, error: partnerError } = await supabase
+      .from("partners")
+      .select("id")
+      .eq("user_id", partnerUser.id)
+      .single();
+
+    if (partnerError || !partnerData) {
+      return res.status(403).json({
+        success: false,
+        error: "Partner profile not found",
+      });
+    }
+
+    // Validate required fields
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: "User ID is required",
+      });
+    }
+
+    // Process the redemption using the database function
+    const { data, error } = await supabase.rpc("process_deal_redemption", {
+      p_user_id: userId,
+      p_partner_id: partnerData.id,
+      p_deal_id: dealId,
+      p_redeemed_by: partnerUser.id,
+      p_discount_amount: discountAmount || null,
+      p_original_amount: originalAmount || null,
+      p_redemption_method: redemptionMethod,
+      p_notes: notes || null,
+    });
+
+    if (error) {
+      console.error("Database error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to process redemption",
+      });
+    }
+
+    const redemptionResult = data;
+
+    if (redemptionResult.success) {
+      res.json({
+        success: true,
+        data: {
+          redemptionId: redemptionResult.redemption_id,
+          redemptionCode: redemptionResult.redemption_code,
+          message: redemptionResult.message,
+        },
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: redemptionResult.error,
+      });
+    }
+  } catch (error) {
+    console.error("Error processing redemption:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to process redemption",
+    });
+  }
+});
+
+// GET /api/v1/deals/redemptions/my-history - Get user's redemption history
+router.get("/redemptions/my-history", verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (page - 1) * limit;
+
+    // Get user's redemption history with deal and partner details
+    const { data: redemptions, error } = await supabase
+      .from("redemptions")
+      .select(
+        `
+        id,
+        discount_amount,
+        original_amount,
+        final_amount,
+        redemption_method,
+        redemption_code,
+        redeemed_at,
+        notes,
+        deals (
+          deal_title,
+          description,
+          min_discount,
+          max_discount
+        ),
+        partners (
+          brand_name,
+          business_type
+        )
+      `
+      )
+      .eq("user_id", userId)
+      .order("redeemed_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error("Database error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch redemption history",
+      });
+    }
+
+    // Get total count for pagination
+    const { count, error: countError } = await supabase
+      .from("redemptions")
+      .select("id", { count: "exact" })
+      .eq("user_id", userId);
+
+    if (countError) {
+      console.error("Count error:", countError);
+    }
+
+    res.json({
+      success: true,
+      data: redemptions,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: count || redemptions.length,
+        totalPages: Math.ceil((count || redemptions.length) / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching redemption history:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch redemption history",
+    });
+  }
+});
+
 module.exports = router;

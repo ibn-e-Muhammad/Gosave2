@@ -7,7 +7,7 @@ import Button from "../../components/UI/Button";
 import UserManagementTable from "../../components/Admin/Users/UserManagementTable";
 import PartnerApprovalQueue from "../../components/Admin/Partners/PartnerApprovalQueue";
 import DealManagementTable from "../../components/Admin/Deals/DealManagementTable";
-import DealAnalytics from "../../components/Admin/Deals/DealAnalytics";
+import AnalyticsDashboard from "../../components/Admin/Analytics/AnalyticsDashboard";
 
 const AdminDashboard = () => {
   const { session } = useAuth();
@@ -210,14 +210,11 @@ const AdminDashboard = () => {
                       >
                         Manage Partners
                       </Button>
-                      <Button 
-                        size="lg" 
-                        onClick={() => setCurrentView("deals")}
-                      >
+                      <Button size="lg" onClick={() => setCurrentView("deals")}>
                         Manage Deals
                       </Button>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="lg"
                         onClick={() => setCurrentView("analytics")}
                       >
@@ -244,9 +241,9 @@ const AdminDashboard = () => {
               <DealManagementTable />
             </div>
           ) : currentView === "analytics" ? (
-            /* Analytics View */
+            /* Enhanced Analytics View */
             <div className="space-y-8">
-              <DealAnalytics />
+              <AnalyticsDashboard />
             </div>
           ) : null}
         </div>

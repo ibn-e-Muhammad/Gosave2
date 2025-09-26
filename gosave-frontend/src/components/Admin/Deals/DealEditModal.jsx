@@ -1,28 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../../hooks/useAuth';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../../hooks/useAuth";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories = [] }) => {
+const DealEditModal = ({
+  deal,
+  onClose,
+  onDealUpdated,
+  partners = [],
+  categories = [],
+}) => {
   const { session } = useAuth();
   const [formData, setFormData] = useState({
-    partner_id: '',
-    deal_title: '',
-    description: '',
-    start_date: '',
-    end_date: '',
-    min_discount: '',
-    max_discount: '',
-    membership_tier: 'basic',
-    location: '',
-    city: '',
-    image_url: '',
-    terms_conditions: '',
-    usage_instructions: '',
-    max_redemptions: '',
+    partner_id: "",
+    deal_title: "",
+    description: "",
+    start_date: "",
+    end_date: "",
+    min_discount: "",
+    max_discount: "",
+    membership_tier: "basic",
+    location: "",
+    city: "",
+    image_url: "",
+    terms_conditions: "",
+    usage_instructions: "",
+    max_redemptions: "",
     is_featured: false,
-    status: 'active',
-    category_id: '',
+    status: "active",
+    category_id: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -33,72 +39,79 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
     if (deal) {
       // Edit mode - populate form with existing deal data
       setFormData({
-        partner_id: deal.brandId || '',
-        deal_title: deal.title || '',
-        description: deal.description || '',
-        start_date: deal.startDate || '',
-        end_date: deal.endDate || '',
-        min_discount: deal.minDiscount || '',
-        max_discount: deal.maxDiscount || '',
-        membership_tier: deal.tier || 'basic',
-        location: deal.location || '',
-        city: deal.city || '',
-        image_url: deal.imageUrl || '',
-        terms_conditions: deal.termsConditions || '',
-        usage_instructions: deal.usageInstructions || '',
-        max_redemptions: deal.maxRedemptions || '',
+        partner_id: deal.brandId || "",
+        deal_title: deal.title || "",
+        description: deal.description || "",
+        start_date: deal.startDate || "",
+        end_date: deal.endDate || "",
+        min_discount: deal.minDiscount || "",
+        max_discount: deal.maxDiscount || "",
+        membership_tier: deal.tier || "basic",
+        location: deal.location || "",
+        city: deal.city || "",
+        image_url: deal.imageUrl || "",
+        terms_conditions: deal.termsConditions || "",
+        usage_instructions: deal.usageInstructions || "",
+        max_redemptions: deal.maxRedemptions || "",
         is_featured: deal.isFeatured || false,
-        status: deal.status || 'active',
-        category_id: deal.categoryId || '',
+        status: deal.status || "active",
+        category_id: deal.categoryId || "",
       });
     }
   }, [deal]);
 
   const fetchApprovedPartners = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/v1/partners/approved`, {
+      const response = await fetch(`${API_URL}/api/v1/partners`, {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
       const data = await response.json();
       if (data.success) {
-        setApprovedPartners(data.data);
+        setApprovedPartners(data.data || []);
+      } else {
+        setApprovedPartners([]);
       }
-    } catch (err) {
-      console.error('Error fetching partners:', err);
+    } catch (error) {
+      console.error("Error fetching approved partners:", error);
+      setApprovedPartners([]);
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const validateForm = () => {
     const errors = [];
-    
-    if (!formData.partner_id) errors.push('Partner is required');
-    if (!formData.deal_title.trim()) errors.push('Deal title is required');
-    if (!formData.start_date) errors.push('Start date is required');
-    if (!formData.end_date) errors.push('End date is required');
-    if (!formData.min_discount || formData.min_discount < 0) errors.push('Valid minimum discount is required');
-    
+
+    if (!formData.partner_id) errors.push("Partner is required");
+    if (!formData.deal_title.trim()) errors.push("Deal title is required");
+    if (!formData.start_date) errors.push("Start date is required");
+    if (!formData.end_date) errors.push("End date is required");
+    if (!formData.min_discount || formData.min_discount < 0)
+      errors.push("Valid minimum discount is required");
+
     if (new Date(formData.start_date) >= new Date(formData.end_date)) {
-      errors.push('End date must be after start date');
+      errors.push("End date must be after start date");
     }
-    
-    if (formData.max_discount && parseFloat(formData.max_discount) < parseFloat(formData.min_discount)) {
-      errors.push('Maximum discount cannot be less than minimum discount');
+
+    if (
+      formData.max_discount &&
+      parseFloat(formData.max_discount) < parseFloat(formData.min_discount)
+    ) {
+      errors.push("Maximum discount cannot be less than minimum discount");
     }
 
     if (formData.max_redemptions && parseInt(formData.max_redemptions) < 0) {
-      errors.push('Maximum redemptions must be a positive number');
+      errors.push("Maximum redemptions must be a positive number");
     }
 
     return errors;
@@ -106,10 +119,10 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const validationErrors = validateForm();
     if (validationErrors.length > 0) {
-      setError(validationErrors.join(', '));
+      setError(validationErrors.join(", "));
       return;
     }
 
@@ -121,21 +134,25 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
       const submitData = {
         ...formData,
         min_discount: parseFloat(formData.min_discount),
-        max_discount: formData.max_discount ? parseFloat(formData.max_discount) : parseFloat(formData.min_discount),
-        max_redemptions: formData.max_redemptions ? parseInt(formData.max_redemptions) : 0,
+        max_discount: formData.max_discount
+          ? parseFloat(formData.max_discount)
+          : parseFloat(formData.min_discount),
+        max_redemptions: formData.max_redemptions
+          ? parseInt(formData.max_redemptions)
+          : 0,
       };
 
-      const url = deal 
+      const url = deal
         ? `${API_URL}/api/v1/deals/admin/${deal.id}`
         : `${API_URL}/api/v1/deals/admin/create`;
-      
-      const method = deal ? 'PUT' : 'POST';
+
+      const method = deal ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
         headers: {
           Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(submitData),
       });
@@ -146,11 +163,11 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
         onDealUpdated(data.data);
         onClose();
       } else {
-        setError(data.error || `Failed to ${deal ? 'update' : 'create'} deal`);
+        setError(data.error || `Failed to ${deal ? "update" : "create"} deal`);
       }
     } catch (err) {
-      console.error(`Error ${deal ? 'updating' : 'creating'} deal:`, err);
-      setError('Failed to connect to server');
+      console.error(`Error ${deal ? "updating" : "creating"} deal:`, err);
+      setError("Failed to connect to server");
     } finally {
       setLoading(false);
     }
@@ -162,14 +179,24 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-semibold text-white">
-              {deal ? 'Edit Deal' : 'Create New Deal'}
+              {deal ? "Edit Deal" : "Create New Deal"}
             </h3>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-white transition-colors duration-200"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -183,10 +210,15 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <div>
-              <h4 className="text-lg font-medium text-white mb-4">Basic Information</h4>
+              <h4 className="text-lg font-medium text-white mb-4">
+                Basic Information
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="partner_id" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="partner_id"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Partner *
                   </label>
                   <select
@@ -198,7 +230,7 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                     className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="">Select partner...</option>
-                    {approvedPartners.map(partner => (
+                    {(approvedPartners || []).map((partner) => (
                       <option key={partner.id} value={partner.id}>
                         {partner.brandName} - {partner.ownerName}
                       </option>
@@ -207,7 +239,10 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                 </div>
 
                 <div>
-                  <label htmlFor="category_id" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="category_id"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Category
                   </label>
                   <select
@@ -218,7 +253,7 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                     className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="">Select category...</option>
-                    {categories.map(category => (
+                    {categories.map((category) => (
                       <option key={category.id} value={category.id}>
                         {category.name}
                       </option>
@@ -227,7 +262,10 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                 </div>
 
                 <div className="md:col-span-2">
-                  <label htmlFor="deal_title" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="deal_title"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Deal Title *
                   </label>
                   <input
@@ -243,7 +281,10 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                 </div>
 
                 <div className="md:col-span-2">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Description
                   </label>
                   <textarea
@@ -258,7 +299,10 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                 </div>
 
                 <div>
-                  <label htmlFor="image_url" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="image_url"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Image URL
                   </label>
                   <input
@@ -276,10 +320,15 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
 
             {/* Deal Terms */}
             <div>
-              <h4 className="text-lg font-medium text-white mb-4">Deal Terms</h4>
+              <h4 className="text-lg font-medium text-white mb-4">
+                Deal Terms
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label htmlFor="min_discount" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="min_discount"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Min Discount (%) *
                   </label>
                   <input
@@ -297,7 +346,10 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                 </div>
 
                 <div>
-                  <label htmlFor="max_discount" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="max_discount"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Max Discount (%)
                   </label>
                   <input
@@ -314,7 +366,10 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                 </div>
 
                 <div>
-                  <label htmlFor="membership_tier" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="membership_tier"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Membership Tier *
                   </label>
                   <select
@@ -332,7 +387,10 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                 </div>
 
                 <div>
-                  <label htmlFor="max_redemptions" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="max_redemptions"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Max Redemptions
                   </label>
                   <input
@@ -351,10 +409,15 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
 
             {/* Dates and Location */}
             <div>
-              <h4 className="text-lg font-medium text-white mb-4">Dates and Location</h4>
+              <h4 className="text-lg font-medium text-white mb-4">
+                Dates and Location
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label htmlFor="start_date" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="start_date"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Start Date *
                   </label>
                   <input
@@ -364,13 +427,16 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                     value={formData.start_date}
                     onChange={handleInputChange}
                     required
-                    min={new Date().toISOString().split('T')[0]}
+                    min={new Date().toISOString().split("T")[0]}
                     className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="end_date" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="end_date"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     End Date *
                   </label>
                   <input
@@ -380,13 +446,19 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                     value={formData.end_date}
                     onChange={handleInputChange}
                     required
-                    min={formData.start_date || new Date().toISOString().split('T')[0]}
+                    min={
+                      formData.start_date ||
+                      new Date().toISOString().split("T")[0]
+                    }
                     className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="city" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="city"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     City
                   </label>
                   <select
@@ -409,7 +481,10 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                 </div>
 
                 <div>
-                  <label htmlFor="location" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="location"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Location
                   </label>
                   <input
@@ -427,10 +502,15 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
 
             {/* Terms and Instructions */}
             <div>
-              <h4 className="text-lg font-medium text-white mb-4">Terms and Instructions</h4>
+              <h4 className="text-lg font-medium text-white mb-4">
+                Terms and Instructions
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="terms_conditions" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="terms_conditions"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Terms & Conditions
                   </label>
                   <textarea
@@ -445,7 +525,10 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                 </div>
 
                 <div>
-                  <label htmlFor="usage_instructions" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="usage_instructions"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Usage Instructions
                   </label>
                   <textarea
@@ -463,10 +546,15 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
 
             {/* Status and Settings */}
             <div>
-              <h4 className="text-lg font-medium text-white mb-4">Status and Settings</h4>
+              <h4 className="text-lg font-medium text-white mb-4">
+                Status and Settings
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="status"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Status
                   </label>
                   <select
@@ -491,7 +579,10 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                     onChange={handleInputChange}
                     className="mr-3 w-4 h-4 text-indigo-600 bg-transparent border-white/20 rounded focus:ring-indigo-500"
                   />
-                  <label htmlFor="is_featured" className="text-sm font-medium text-gray-300">
+                  <label
+                    htmlFor="is_featured"
+                    className="text-sm font-medium text-gray-300"
+                  >
                     Featured Deal (appears prominently on homepage)
                   </label>
                 </div>
@@ -516,10 +607,12 @@ const DealEditModal = ({ deal, onClose, onDealUpdated, partners = [], categories
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    {deal ? 'Updating...' : 'Creating...'}
+                    {deal ? "Updating..." : "Creating..."}
                   </div>
+                ) : deal ? (
+                  "Update Deal"
                 ) : (
-                  deal ? 'Update Deal' : 'Create Deal'
+                  "Create Deal"
                 )}
               </button>
             </div>

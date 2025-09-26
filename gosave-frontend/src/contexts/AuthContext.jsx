@@ -212,6 +212,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     isAdmin: user?.role === "admin",
     isMember: user?.role === "member",
+    isPartner: user?.role === "partner",
     hasValidMembership:
       user?.membership && new Date(user.membership.valid_until) > new Date(),
     isPremiumMember: user?.membership?.name === "premium",

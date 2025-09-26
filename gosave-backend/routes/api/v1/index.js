@@ -6,12 +6,16 @@ const dealsRoutes = require("./deals");
 const partnersRoutes = require("./partners");
 const authRoutes = require("./auth");
 const adminUsersRoutes = require("./admin/users");
+const debugRoutes = require("./debug");
+const analyticsRoutes = require("./analytics-working");
 
 // Use route modules
 router.use("/deals", dealsRoutes);
 router.use("/partners", partnersRoutes);
 router.use("/auth", authRoutes);
 router.use("/admin/users", adminUsersRoutes);
+router.use("/debug", debugRoutes);
+router.use("/analytics", analyticsRoutes);
 
 // API info endpoint
 router.get("/", (req, res) => {
@@ -26,6 +30,8 @@ router.get("/", (req, res) => {
       admin: {
         users: "/admin/users",
       },
+      debug: "/debug",
+      analytics: "/analytics",
     },
   });
 });

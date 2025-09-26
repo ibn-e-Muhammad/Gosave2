@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, User, LogOut, Settings, Crown } from "lucide-react";
+import { Menu, X, User, LogOut, Settings, Crown, Store } from "lucide-react";
 import Container from "./UI/Container";
 import Button from "./UI/Button";
 import { cn } from "../lib/utils";
@@ -10,7 +10,8 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const location = useLocation();
-  const { user, isAuthenticated, logout, isAdmin, isPremiumMember } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin, isPremiumMember, isPartner } =
+    useAuth();
 
   const navigation = [
     { name: "Home", href: "/" },
@@ -123,6 +124,19 @@ const Navbar = () => {
                         <span>Dashboard</span>
                       </div>
                     </Link>
+
+                    {isPartner && (
+                      <Link
+                        to="/partner/dashboard"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Store size={16} />
+                          <span>Partner Portal</span>
+                        </div>
+                      </Link>
+                    )}
 
                     {isAdmin && (
                       <Link
