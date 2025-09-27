@@ -1,10 +1,19 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Eye, EyeOff, User, Mail, Phone, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  User,
+  Mail,
+  Phone,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 import Container from "../components/UI/Container";
 import GlassCard from "../components/UI/GlassCard";
 import Button from "../components/UI/Button";
+import EmailVerificationHelper from "../components/EmailVerificationHelper";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +29,7 @@ const Register = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [registrationResult, setRegistrationResult] = useState(null);
 
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -50,11 +60,13 @@ const Register = () => {
         break;
 
       case "password":
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
+        const passwordRegex =
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
         if (!value) {
           errors.password = "Password is required";
         } else if (!passwordRegex.test(value)) {
-          errors.password = "Password must be at least 8 characters with uppercase, lowercase, and number";
+          errors.password =
+            "Password must be at least 8 characters with uppercase, lowercase, and number";
         } else {
           delete errors.password;
         }
@@ -94,7 +106,7 @@ const Register = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     validateField(name, value);
   };
 
@@ -104,8 +116,9 @@ const Register = () => {
     setError("");
 
     // Final validation
-    Object.keys(formData).forEach(key => {
-      if (key !== "phone") { // phone is optional
+    Object.keys(formData).forEach((key) => {
+      if (key !== "phone") {
+        // phone is optional
         validateField(key, formData[key]);
       }
     });
@@ -116,10 +129,12 @@ const Register = () => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/register`, {
-        method: 'POST',
+      // Try enhanced auth system first
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const response = await fetch(`${apiUrl}/api/v1/auth-enhanced/register`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: formData.email.toLowerCase(),
@@ -134,12 +149,50 @@ const Register = () => {
       if (data.success) {
         setSuccess(true);
         setError("");
+        setRegistrationResult(data);
+
+        // In development, show helper immediately
+        if (data.development) {
+          console.log("🔧 Development registration successful:", data);
+        }
       } else {
         setError(data.error || "Registration failed. Please try again.");
       }
     } catch (error) {
-      console.error("Registration failed:", error);
-      setError("An unexpected error occurred. Please try again.");
+      console.error("Enhanced registration failed, trying fallback:", error);
+
+      // Fallback to original auth system
+      try {
+        const response = await fetch(
+          `${
+            import.meta.env.VITE_API_URL || "http://localhost:5000"
+          }/api/v1/auth/register`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: formData.email.toLowerCase(),
+              password: formData.password,
+              full_name: formData.full_name.trim(),
+              phone: formData.phone.trim() || null,
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.success) {
+          setSuccess(true);
+          setError("");
+        } else {
+          setError(data.error || "Registration failed. Please try again.");
+        }
+      } catch (fallbackError) {
+        console.error("Registration failed:", fallbackError);
+        setError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -147,18 +200,23 @@ const Register = () => {
 
   const resendVerification = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/resend-verification`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email.toLowerCase(),
-        }),
-      });
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_URL || "http://localhost:5000"
+        }/api/v1/auth/resend-verification`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email.toLowerCase(),
+          }),
+        }
+      );
 
       const data = await response.json();
-      
+
       if (data.success) {
         setError("");
         // Could add a success message here
@@ -181,14 +239,15 @@ const Register = () => {
                 <div className="flex justify-center">
                   <CheckCircle className="w-16 h-16 text-green-400" />
                 </div>
-                
+
                 <div className="space-y-3">
                   <h1 className="text-3xl font-display font-bold text-white">
                     Account Created!
                   </h1>
                   <p className="text-white/80 leading-relaxed">
-                    We've sent a verification email to <strong>{formData.email}</strong>. 
-                    Please check your inbox and click the verification link to activate your account.
+                    We've sent a verification email to{" "}
+                    <strong>{formData.email}</strong>. Please check your inbox
+                    and click the verification link to activate your account.
                   </p>
                 </div>
 
@@ -200,7 +259,7 @@ const Register = () => {
                   >
                     Resend Verification Email
                   </Button>
-                  
+
                   <Link to="/login">
                     <Button variant="ghost" className="w-full">
                       Back to Login
@@ -208,6 +267,18 @@ const Register = () => {
                   </Link>
                 </div>
               </div>
+
+              {/* Development Email Verification Helper */}
+              {registrationResult?.development && (
+                <EmailVerificationHelper
+                  userEmail={formData.email}
+                  verificationData={registrationResult.development}
+                  onVerificationComplete={(result) => {
+                    console.log("Verification completed:", result);
+                    // Could redirect to login or dashboard here
+                  }}
+                />
+              )}
             </GlassCard>
           </div>
         </Container>
@@ -226,7 +297,9 @@ const Register = () => {
                 <h1 className="text-3xl font-display font-bold text-white">
                   Create Account
                 </h1>
-                <p className="text-white/70">Join GoSave and start saving today</p>
+                <p className="text-white/70">
+                  Join GoSave and start saving today
+                </p>
               </div>
 
               {/* Error Message */}
@@ -256,7 +329,9 @@ const Register = () => {
                       />
                     </div>
                     {validationErrors.full_name && (
-                      <p className="text-red-300 text-sm mt-1">{validationErrors.full_name}</p>
+                      <p className="text-red-300 text-sm mt-1">
+                        {validationErrors.full_name}
+                      </p>
                     )}
                   </div>
 
@@ -276,7 +351,9 @@ const Register = () => {
                       />
                     </div>
                     {validationErrors.email && (
-                      <p className="text-red-300 text-sm mt-1">{validationErrors.email}</p>
+                      <p className="text-red-300 text-sm mt-1">
+                        {validationErrors.email}
+                      </p>
                     )}
                   </div>
 
@@ -295,7 +372,9 @@ const Register = () => {
                       />
                     </div>
                     {validationErrors.phone && (
-                      <p className="text-red-300 text-sm mt-1">{validationErrors.phone}</p>
+                      <p className="text-red-300 text-sm mt-1">
+                        {validationErrors.phone}
+                      </p>
                     )}
                   </div>
 
@@ -318,11 +397,17 @@ const Register = () => {
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
                         disabled={loading}
                       >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        {showPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
                       </button>
                     </div>
                     {validationErrors.password && (
-                      <p className="text-red-300 text-sm mt-1">{validationErrors.password}</p>
+                      <p className="text-red-300 text-sm mt-1">
+                        {validationErrors.password}
+                      </p>
                     )}
                   </div>
 
@@ -341,15 +426,23 @@ const Register = () => {
                       />
                       <button
                         type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
                         disabled={loading}
                       >
-                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        {showConfirmPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
                       </button>
                     </div>
                     {validationErrors.confirmPassword && (
-                      <p className="text-red-300 text-sm mt-1">{validationErrors.confirmPassword}</p>
+                      <p className="text-red-300 text-sm mt-1">
+                        {validationErrors.confirmPassword}
+                      </p>
                     )}
                   </div>
                 </div>

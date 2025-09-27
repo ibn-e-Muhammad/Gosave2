@@ -5,16 +5,16 @@ const router = express.Router();
 const dealsRoutes = require("./deals");
 const partnersRoutes = require("./partners");
 const authRoutes = require("./auth");
+const authEnhancedRoutes = require("./auth-enhanced");
 const adminUsersRoutes = require("./admin/users");
-const debugRoutes = require("./debug");
-const analyticsRoutes = require("./analytics-working");
+const analyticsRoutes = require("./analytics");
 
 // Use route modules
 router.use("/deals", dealsRoutes);
 router.use("/partners", partnersRoutes);
 router.use("/auth", authRoutes);
+router.use("/auth-enhanced", authEnhancedRoutes);
 router.use("/admin/users", adminUsersRoutes);
-router.use("/debug", debugRoutes);
 router.use("/analytics", analyticsRoutes);
 
 // API info endpoint
@@ -27,6 +27,7 @@ router.get("/", (req, res) => {
       deals: "/deals",
       partners: "/partners",
       auth: "/auth",
+      "auth-enhanced": "/auth-enhanced (development email verification)",
       admin: {
         users: "/admin/users",
       },

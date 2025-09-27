@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const path = require("path");
 require("dotenv").config();
 
 const app = express();
@@ -23,6 +24,9 @@ app.use(
   })
 );
 app.use(express.json());
+
+// Serve static files for testing
+app.use("/test", express.static(path.join(__dirname, "public")));
 
 // Basic health check route (define before other routes)
 app.get("/api/v1/health", (req, res) => {
