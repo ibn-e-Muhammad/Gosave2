@@ -44,6 +44,12 @@ module.exports = async (req, res) => {
   const url = req.url;
   const method = req.method;
 
+  // Handle v1 compatibility routes
+  if (url.startsWith("/api/v1/")) {
+    const newPath = url.replace("/api/v1/", "/api/");
+    return res.redirect(307, newPath);
+  }
+
   try {
     // API Root endpoint
     if (url === "/api" || url === "/api/") {
@@ -466,12 +472,6 @@ module.exports = async (req, res) => {
         "GET /api/partners - Get all partners",
       ],
     });
-
-    // Add v1 compatibility routes for frontend
-    if (url.startsWith("/api/v1/")) {
-      const newPath = url.replace("/api/v1/", "/api/");
-      return res.redirect(307, newPath);
-    }
 
   } catch (error) {
     console.error("API Error:", error);
