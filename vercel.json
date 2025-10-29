@@ -6,7 +6,7 @@
       "src": "gosave-frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "gosave-frontend/dist"
+        "distDir": "dist"
       }
     },
     {
@@ -23,7 +23,5 @@
       "src": "/(.*)",
       "dest": "gosave-frontend/dist/$1"
     }
-  ],
-  "installCommand": "npm install --prefix gosave-frontend && npm install --prefix gosave-backend",
-  "buildCommand": "npm run build --prefix gosave-frontend"
+  ]
 }
