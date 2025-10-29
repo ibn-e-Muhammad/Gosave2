@@ -47,31 +47,33 @@ module.exports = async (req, res) => {
   // Debug logging for troubleshooting
   console.log(`[${new Date().toISOString()}] ${method} ${url}`);
 
-  // Handle v1 compatibility routes
+  // Handle v1 compatibility routes by internally processing them
+  let actualUrl = url;
   if (url.startsWith("/api/v1/")) {
-    let newPath = url.replace("/api/v1/", "/api/");
+    actualUrl = url.replace("/api/v1/", "/api/");
     // Handle auth-specific path mapping
-    if (newPath.startsWith("/api/auth/")) {
-      newPath = newPath.replace("/api/auth/", "/api/");
+    if (actualUrl.startsWith("/api/auth/")) {
+      actualUrl = actualUrl.replace("/api/auth/", "/api/");
     }
-    console.log(`[REDIRECT] ${url} -> ${newPath}`);
-    return res.redirect(307, newPath);
+    console.log(`[V1 COMPAT] ${url} -> ${actualUrl}`);
   }
 
   // Handle doubled /api/api/v1/ routes (when frontend env var includes /api)
   if (url.startsWith("/api/api/v1/")) {
-    let newPath = url.replace("/api/api/v1/", "/api/");
+    actualUrl = url.replace("/api/api/v1/", "/api/");
     // Handle auth-specific path mapping
-    if (newPath.startsWith("/api/auth/")) {
-      newPath = newPath.replace("/api/auth/", "/api/");
+    if (actualUrl.startsWith("/api/auth/")) {
+      actualUrl = actualUrl.replace("/api/auth/", "/api/");
     }
-    console.log(`[REDIRECT] ${url} -> ${newPath}`);
-    return res.redirect(307, newPath);
+    console.log(`[DOUBLED COMPAT] ${url} -> ${actualUrl}`);
   }
+
+  // Use the mapped URL for all subsequent checks
+  const processUrl = actualUrl;
 
   try {
     // API Root endpoint
-    if (url === "/api" || url === "/api/") {
+    if (processUrl === "/api" || processUrl === "/api/") {
       return res.status(200).json({
         message: "🎉 GoSave API is running on Vercel!",
         timestamp: new Date().toISOString(),
@@ -94,7 +96,7 @@ module.exports = async (req, res) => {
     }
 
     // Health check endpoint
-    if (url === "/api/health") {
+    if (processUrl === "/api/health") {
       return res.status(200).json({
         message: "GoSave API Health Check - OK!",
         timestamp: new Date().toISOString(),
@@ -160,7 +162,7 @@ module.exports = async (req, res) => {
         content_type: req.headers["content-type"],
       });
     }
-    if (url === "/api/register" && method === "POST") {
+    if (processUrl === "/api/register" && method === "POST") {
       console.log("Registration request received:", {
         body: req.body,
         headers: req.headers,
@@ -265,7 +267,7 @@ module.exports = async (req, res) => {
     }
 
     // User Login endpoint
-    if (url === "/api/login" && method === "POST") {
+    if (processUrl === "/api/login" && method === "POST") {
       const { email, password } = req.body;
 
       if (!email || !password) {
@@ -329,7 +331,7 @@ module.exports = async (req, res) => {
     }
 
     // Get current user profile endpoint (for authenticated users)
-    if (url === "/api/me" && method === "GET") {
+    if (processUrl === "/api/me" && method === "GET") {
       const authorization = req.headers.authorization;
 
       if (!authorization || !authorization.startsWith("Bearer ")) {
@@ -392,7 +394,7 @@ module.exports = async (req, res) => {
     }
 
     // Get Deals endpoint
-    if (url === "/api/deals" && method === "GET") {
+    if (processUrl === "/api/deals" && method === "GET") {
       const { data: deals, error } = await supabase
         .from("deals")
         .select(
@@ -451,7 +453,7 @@ module.exports = async (req, res) => {
     }
 
     // Get Partners endpoint
-    if (url === "/api/partners" && method === "GET") {
+    if (processUrl === "/api/partners" && method === "GET") {
       const { data: partners, error } = await supabase
         .from("partners")
         .select("*")
