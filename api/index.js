@@ -75,8 +75,48 @@ module.exports = async (req, res) => {
         environment: process.env.NODE_ENV || "production",
         status: "healthy",
         uptime: process.uptime(),
-        memory: process.memoryUsage(),
+        memory: process.memoryUsage()
       });
+    }
+
+    // Supabase connection test endpoint
+    if (url === "/api/test-db") {
+      try {
+        // Simple query to test connection
+        const { data, error } = await supabase
+          .from('users')
+          .select('count(*)')
+          .limit(1);
+        
+        if (error) {
+          return res.status(500).json({
+            success: false,
+            error: "Database connection failed",
+            details: error,
+            env_check: {
+              has_url: !!process.env.SUPABASE_URL,
+              has_key: !!process.env.SUPABASE_ANON_KEY,
+              url_preview: process.env.SUPABASE_URL ? process.env.SUPABASE_URL.substring(0, 30) + '...' : 'NOT_SET'
+            }
+          });
+        }
+        
+        return res.status(200).json({
+          success: true,
+          message: "Database connection successful",
+          env_check: {
+            has_url: !!process.env.SUPABASE_URL,
+            has_key: !!process.env.SUPABASE_ANON_KEY,
+            url_preview: process.env.SUPABASE_URL ? process.env.SUPABASE_URL.substring(0, 30) + '...' : 'NOT_SET'
+          }
+        });
+      } catch (err) {
+        return res.status(500).json({
+          success: false,
+          error: "Database test failed",
+          details: err.message
+        });
+      }
     }
 
     // User Registration endpoint
@@ -261,9 +301,12 @@ module.exports = async (req, res) => {
         .order("created_at", { ascending: false });
 
       if (error) {
+        console.error("Supabase deals error:", error);
         return res.status(500).json({
           success: false,
           error: "Failed to fetch deals",
+          debug: error.message,
+          details: error,
         });
       }
 
@@ -307,9 +350,12 @@ module.exports = async (req, res) => {
         .order("created_at", { ascending: false });
 
       if (error) {
+        console.error("Supabase partners error:", error);
         return res.status(500).json({
           success: false,
           error: "Failed to fetch partners",
+          debug: error.message,
+          details: error,
         });
       }
 
