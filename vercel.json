@@ -1,34 +1,18 @@
 {
   "version": 2,
-  "name": "gosave-platform",
+  "installCommand": "cd gosave-frontend && npm install",
   "buildCommand": "cd gosave-frontend && npm run build",
   "outputDirectory": "gosave-frontend/dist",
-  "installCommand": "cd gosave-frontend && npm install",
   "builds": [
     {
-      "src": "api/health.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/index.js",
+      "src": "api/*.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/health",
-      "dest": "/api/health.js"
-    },
-    {
       "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/api/$1"
     }
   ]
 }
