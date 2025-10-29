@@ -25,10 +25,5 @@
     }
   ],
   "installCommand": "npm install --prefix gosave-frontend && npm install --prefix gosave-backend",
-  "buildCommand": "npm run build --prefix gosave-frontend",
-  "functions": {
-    "gosave-backend/server.js": {
-      "maxDuration": 30
-    }
-  }
+  "buildCommand": "npm run build --prefix gosave-frontend"
 }
