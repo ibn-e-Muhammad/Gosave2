@@ -1,0 +1,116 @@
+/* Google Fonts Import - Must be first */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Cinzel+Decorative:wght@400;700;900&family=Spectral+SC:wght@200;300;400;500;600;700;800&display=swap");
+
+/* Tailwind CSS directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Variables and Base Styles */
+@layer base {
+  :root {
+    /* Custom easing for animations */
+    --ease-glass: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-smooth: ease-in-out;
+  }
+
+  /* Removed invalid global border utility to avoid Tailwind compile errors */
+
+  body {
+    @apply bg-royal-gradient font-sans text-neutral-black antialiased;
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  /* Typography defaults */
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+
+  h4,
+  h5,
+  h6,
+  p,
+  span,
+  div {
+    @apply font-sans;
+  }
+}
+
+/* Custom Component Classes */
+@layer components {
+  /* Glass morphism base class */
+  .glass {
+    @apply bg-glass-white backdrop-blur-md border border-white/20 shadow-glass;
+  }
+
+  .glass-blue {
+    @apply bg-glass-blue backdrop-blur-md border border-white/10 shadow-glass;
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply bg-royal-gold text-white font-semibold px-6 py-3 rounded-lg shadow-2 hover:bg-royal-gold-dark hover:scale-105 hover:shadow-glow transition-all duration-320;
+  }
+
+  .btn-secondary {
+    @apply bg-royal-blue text-white font-semibold px-6 py-3 rounded-lg shadow-2 hover:bg-royal-blue-light hover:scale-105 transition-all duration-320;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-royal-blue border border-royal-blue/30 font-semibold px-6 py-3 rounded-lg hover:bg-royal-blue/10 transition-all duration-320;
+  }
+
+  /* Card hover effects */
+  .card-hover {
+    @apply hover:scale-105 hover:shadow-3 transition-all duration-320;
+  }
+
+  /* Text styles */
+  .text-gradient {
+    @apply bg-gradient-to-r from-royal-blue to-royal-gold bg-clip-text text-transparent;
+  }
+}
+
+/* Custom Utilities */
+@layer utilities {
+  /* Animation utilities */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  /* Custom blur utilities */
+  .blur-glass {
+    backdrop-filter: blur(24px);
+  }
+
+  .blur-heavy {
+    backdrop-filter: blur(100px);
+  }
+}
+
+/* Keyframe animations */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  }
+  to {
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.6);
+  }
+}

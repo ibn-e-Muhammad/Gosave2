@@ -1,8 +1,5 @@
 {
-  "version": 2,
-  "installCommand": "cd gosave-frontend && npm install",
-  "buildCommand": "cd gosave-frontend && npm run build",
-  "outputDirectory": "gosave-frontend/dist",
+  "framework": "vite",
   "builds": [
     {
       "src": "api/*.js",
