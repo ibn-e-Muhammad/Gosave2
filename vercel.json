@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "name": "gosave-platform",
+  "builds": [
+    {
+      "src": "gosave-frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "gosave-frontend/dist"
+      }
+    },
+    {
+      "src": "gosave-backend/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "gosave-backend/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "gosave-frontend/dist/$1"
+    }
+  ],
+  "installCommand": "npm install --prefix gosave-frontend && npm install --prefix gosave-backend",
+  "buildCommand": "npm run build --prefix gosave-frontend",
+  "functions": {
+    "gosave-backend/server.js": {
+      "maxDuration": 30
+    }
+  }
+}
