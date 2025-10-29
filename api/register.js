@@ -1,4 +1,4 @@
-const { createClient } = require("@supabase/supabase-js");
+const { createClient } = require('@supabase/supabase-js');
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -21,10 +21,7 @@ const isValidPassword = (password) => {
 
 module.exports = async (req, res) => {
   // Set CORS headers
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "https://gosave-gamma.vercel.app"
-  );
+  res.setHeader("Access-Control-Allow-Origin", "https://gosave-gamma.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -37,7 +34,7 @@ module.exports = async (req, res) => {
   if (req.method !== "POST") {
     return res.status(405).json({
       success: false,
-      error: "Method not allowed",
+      error: "Method not allowed"
     });
   }
 
@@ -62,8 +59,7 @@ module.exports = async (req, res) => {
     if (!isValidPassword(password)) {
       return res.status(400).json({
         success: false,
-        error:
-          "Password must be at least 8 characters with uppercase, lowercase, and number",
+        error: "Password must be at least 8 characters with uppercase, lowercase, and number",
       });
     }
 
@@ -137,8 +133,7 @@ module.exports = async (req, res) => {
     // Return success response
     res.status(201).json({
       success: true,
-      message:
-        "Registration successful! Please check your email to verify your account.",
+      message: "Registration successful! Please check your email to verify your account.",
       user: {
         id: userData.id,
         email: userData.email,
@@ -148,6 +143,7 @@ module.exports = async (req, res) => {
       },
       // Note: We don't return session/tokens for unverified users
     });
+
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({

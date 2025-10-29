@@ -1,8 +1,14 @@
 // GoSave API Index - Vercel Serverless Function
 module.exports = (req, res) => {
   // Set CORS headers
-  res.setHeader("Access-Control-Allow-Origin", "https://gosave-gamma.vercel.app");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://gosave-gamma.vercel.app"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
@@ -22,16 +28,16 @@ module.exports = (req, res) => {
       endpoints: {
         health: "/api/health",
         auth: {
-          register: "/api/v1/auth/register",
-          login: "/api/v1/auth/login"
+          register: "/api/register",
+          login: "/api/login"
         },
-        deals: "/api/v1/deals",
-        partners: "/api/v1/partners"
+        deals: "/api/deals",
+        partners: "/api/partners"
       },
       cors: {
         origin: "https://gosave-gamma.vercel.app",
-        credentials: true
-      }
+        credentials: true,
+      },
     });
   }
 
@@ -43,7 +49,7 @@ module.exports = (req, res) => {
       environment: process.env.NODE_ENV || "production",
       status: "healthy",
       uptime: process.uptime(),
-      memory: process.memoryUsage()
+      memory: process.memoryUsage(),
     });
   }
 
@@ -52,6 +58,13 @@ module.exports = (req, res) => {
     error: "API endpoint not found",
     path: req.url,
     message: "Please check the available endpoints at /api",
-    available_endpoints: ["/api", "/api/health", "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/deals", "/api/v1/partners"]
+    available_endpoints: [
+      "/api",
+      "/api/health",
+      "/api/register",
+      "/api/login",
+      "/api/deals",
+      "/api/partners",
+    ],
   });
 };
