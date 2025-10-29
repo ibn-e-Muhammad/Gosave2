@@ -296,13 +296,12 @@ module.exports = async (req, res) => {
           *,
           partners (
             id,
-            business_name,
+            brand_name,
             logo_url,
-            category
+            business_type
           )
         `
         )
-        .eq("status", "active")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -317,24 +316,24 @@ module.exports = async (req, res) => {
 
       const transformedDeals = deals.map((deal) => ({
         id: deal.id,
-        title: deal.title,
+        title: deal.deal_title,
         description: deal.description,
-        discount_percentage: deal.discount_percentage,
-        original_price: deal.original_price,
-        discounted_price: deal.discounted_price,
-        category: deal.category,
-        status: deal.status,
-        expiry_date: deal.expiry_date,
-        terms_conditions: deal.terms_conditions,
-        usage_limit: deal.usage_limit,
-        used_count: deal.used_count,
+        discount_percentage: deal.min_discount, // using min_discount as percentage
+        original_price: null, // not in schema
+        discounted_price: null, // not in schema
+        category: deal.partner?.business_type,
+        status: 'active', // filtered by active status
+        expiry_date: deal.end_date,
+        terms_conditions: null, // not in schema
+        usage_limit: null, // not in schema
+        used_count: null, // not in schema
         created_at: deal.created_at,
         partner: deal.partners
           ? {
               id: deal.partners.id,
-              business_name: deal.partners.business_name,
+              brand_name: deal.partners.brand_name,
               logo_url: deal.partners.logo_url,
-              category: deal.partners.category,
+              business_type: deal.partners.business_type,
             }
           : null,
       }));
