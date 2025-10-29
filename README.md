@@ -44,24 +44,28 @@ gosave-backend/        # Traditional Express server (optional)
 ## 🌐 API Endpoints
 
 ### Authentication
+
 - `POST /api/v1/auth-enhanced/register` - User registration
 - `POST /api/v1/auth-enhanced/login` - User login
 - `GET /api/v1/auth-enhanced/verify-email` - Email verification
 - `POST /api/v1/auth-enhanced/admin-verify` - Admin verification
 
 ### Deals
+
 - `GET /api/v1/deals` - Get all deals
 - `POST /api/v1/deals` - Create new deal
 - `PUT /api/v1/deals/:id` - Update deal
 - `DELETE /api/v1/deals/:id` - Delete deal
 
 ### Partners
+
 - `GET /api/v1/partners` - Get all partners
 - `POST /api/v1/partners` - Partner registration
 - `PUT /api/v1/partners/:id` - Update partner
 - `POST /api/v1/partners/:id/approve` - Approve partner
 
 ### Admin
+
 - `GET /api/v1/analytics` - System analytics
 - `GET /api/v1/admin/users` - User management
 - `PUT /api/v1/admin/users/:id` - Update user
