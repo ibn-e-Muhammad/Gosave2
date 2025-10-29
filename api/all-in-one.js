@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require("@supabase/supabase-js");
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -20,8 +20,14 @@ const isValidPassword = (password) => {
 
 // Set CORS headers helper
 const setCorsHeaders = (res) => {
-  res.setHeader("Access-Control-Allow-Origin", "https://gosave-gamma.vercel.app");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://gosave-gamma.vercel.app"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");
 };
@@ -52,12 +58,12 @@ module.exports = async (req, res) => {
           register: "/api/register",
           login: "/api/login",
           deals: "/api/deals",
-          partners: "/api/partners"
+          partners: "/api/partners",
         },
         cors: {
           origin: "https://gosave-gamma.vercel.app",
-          credentials: true
-        }
+          credentials: true,
+        },
       });
     }
 
@@ -69,7 +75,7 @@ module.exports = async (req, res) => {
         environment: process.env.NODE_ENV || "production",
         status: "healthy",
         uptime: process.uptime(),
-        memory: process.memoryUsage()
+        memory: process.memoryUsage(),
       });
     }
 
@@ -95,7 +101,8 @@ module.exports = async (req, res) => {
       if (!isValidPassword(password)) {
         return res.status(400).json({
           success: false,
-          error: "Password must be at least 8 characters with uppercase, lowercase, and number",
+          error:
+            "Password must be at least 8 characters with uppercase, lowercase, and number",
         });
       }
 
@@ -159,7 +166,8 @@ module.exports = async (req, res) => {
 
       return res.status(201).json({
         success: true,
-        message: "Registration successful! Please check your email to verify your account.",
+        message:
+          "Registration successful! Please check your email to verify your account.",
         user: {
           id: userData.id,
           email: userData.email,
@@ -238,7 +246,8 @@ module.exports = async (req, res) => {
     if (url === "/api/deals" && method === "GET") {
       const { data: deals, error } = await supabase
         .from("deals")
-        .select(`
+        .select(
+          `
           *,
           partners (
             id,
@@ -246,7 +255,8 @@ module.exports = async (req, res) => {
             logo_url,
             category
           )
-        `)
+        `
+        )
         .eq("status", "active")
         .order("created_at", { ascending: false });
 
@@ -257,7 +267,7 @@ module.exports = async (req, res) => {
         });
       }
 
-      const transformedDeals = deals.map(deal => ({
+      const transformedDeals = deals.map((deal) => ({
         id: deal.id,
         title: deal.title,
         description: deal.description,
@@ -271,18 +281,20 @@ module.exports = async (req, res) => {
         usage_limit: deal.usage_limit,
         used_count: deal.used_count,
         created_at: deal.created_at,
-        partner: deal.partners ? {
-          id: deal.partners.id,
-          business_name: deal.partners.business_name,
-          logo_url: deal.partners.logo_url,
-          category: deal.partners.category
-        } : null
+        partner: deal.partners
+          ? {
+              id: deal.partners.id,
+              business_name: deal.partners.business_name,
+              logo_url: deal.partners.logo_url,
+              category: deal.partners.category,
+            }
+          : null,
       }));
 
       return res.status(200).json({
         success: true,
         deals: transformedDeals,
-        count: transformedDeals.length
+        count: transformedDeals.length,
       });
     }
 
@@ -304,7 +316,7 @@ module.exports = async (req, res) => {
       return res.status(200).json({
         success: true,
         partners: partners || [],
-        count: partners?.length || 0
+        count: partners?.length || 0,
       });
     }
 
@@ -320,16 +332,15 @@ module.exports = async (req, res) => {
         "POST /api/register - User registration",
         "POST /api/login - User login",
         "GET /api/deals - Get all deals",
-        "GET /api/partners - Get all partners"
-      ]
+        "GET /api/partners - Get all partners",
+      ],
     });
-
   } catch (error) {
     console.error("API Error:", error);
     return res.status(500).json({
       success: false,
       error: "Internal server error",
-      message: "An unexpected error occurred"
+      message: "An unexpected error occurred",
     });
   }
 };
