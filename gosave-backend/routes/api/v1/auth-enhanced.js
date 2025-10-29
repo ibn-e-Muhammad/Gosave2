@@ -172,8 +172,12 @@ router.post("/register", async (req, res) => {
     if (isDevelopment) {
       response.development = {
         verificationToken,
-        manualVerificationUrl: `http://localhost:5000/api/v1/auth-enhanced/verify-manual?token=${verificationToken}`,
-        adminVerificationUrl: `http://localhost:5000/api/v1/auth-enhanced/admin-verify?email=${email}`,
+        manualVerificationUrl: `${
+          process.env.BACKEND_URL || "http://localhost:5000"
+        }/api/v1/auth-enhanced/verify-manual?token=${verificationToken}`,
+        adminVerificationUrl: `${
+          process.env.BACKEND_URL || "http://localhost:5000"
+        }/api/v1/auth-enhanced/admin-verify?email=${email}`,
         note: "In development: Use the manual verification URL above or check server logs for email links",
       };
     }
@@ -264,8 +268,12 @@ router.post("/resend-verification", async (req, res) => {
     if (isDevelopment) {
       response.development = {
         verificationToken,
-        manualVerificationUrl: `http://localhost:5000/api/v1/auth-enhanced/verify-manual?token=${verificationToken}`,
-        adminVerificationUrl: `http://localhost:5000/api/v1/auth-enhanced/admin-verify?email=${email}`,
+        manualVerificationUrl: `${
+          process.env.BACKEND_URL || "http://localhost:5000"
+        }/api/v1/auth-enhanced/verify-manual?token=${verificationToken}`,
+        adminVerificationUrl: `${
+          process.env.BACKEND_URL || "http://localhost:5000"
+        }/api/v1/auth-enhanced/admin-verify?email=${email}`,
         note: "Development: Use manual verification if email doesn't work",
       };
 
