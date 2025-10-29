@@ -1,6 +1,7 @@
 # 🚀 GoSave - Simple Vercel Deployment (5 Minutes)
 
 ## What You Need
+
 - Your GitHub repo (✅ You have this)
 - A Vercel account (free)
 - Your Supabase credentials
@@ -13,8 +14,9 @@
 4. **Leave all settings as default and click "Deploy"**
 
 That's it! Vercel will automatically:
+
 - Detect your React frontend
-- Detect your Node.js backend  
+- Detect your Node.js backend
 - Build and deploy everything
 
 ## Step 2: Add Environment Variables
@@ -25,13 +27,15 @@ After deployment, go to your project dashboard:
 2. **Add these variables ONE BY ONE:**
 
 ### Frontend Variables (for React):
+
 ```
 VITE_SUPABASE_URL = your_supabase_project_url
-VITE_SUPABASE_ANON_KEY = your_supabase_anon_key  
+VITE_SUPABASE_ANON_KEY = your_supabase_anon_key
 VITE_API_URL = https://your-app-name.vercel.app/api
 ```
 
 ### Backend Variables (for Node.js API):
+
 ```
 SUPABASE_URL = your_supabase_project_url
 SUPABASE_ANON_KEY = your_supabase_anon_key
@@ -55,8 +59,9 @@ NODE_ENV = production
 Visit: `https://your-app-name.vercel.app`
 
 Test these features:
+
 - ✅ User registration
-- ✅ Email verification  
+- ✅ Email verification
 - ✅ Login/logout
 - ✅ Admin panel
 

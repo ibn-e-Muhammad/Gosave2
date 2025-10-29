@@ -1,33 +1,40 @@
-import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react';
-import Container from './UI/Container';
+import { Link } from "react-router-dom";
+import {
+  Facebook,
+  Twitter,
+  Instagram,
+  Mail,
+  Phone,
+  MapPin,
+} from "lucide-react";
+import Container from "./UI/Container";
 
 const Footer = () => {
   const footerLinks = {
     company: [
-      { name: 'About Us', href: '/about' },
-      { name: 'How It Works', href: '/how-it-works' },
-      { name: 'Careers', href: '/careers' },
-      { name: 'Press', href: '/press' },
+      { name: "About Us", href: "/about" },
+      { name: "How It Works", href: "/how-it-works" },
+      { name: "Careers", href: "/careers" },
+      { name: "Press", href: "/press" },
     ],
     services: [
-      { name: 'Browse Deals', href: '/deals' },
-      { name: 'Find Partners', href: '/partners' },
-      { name: 'Membership Plans', href: '/membership' },
-      { name: 'Gift Cards', href: '/gift-cards' },
+      { name: "Browse Deals", href: "/deals" },
+      { name: "Find Partners", href: "/partners" },
+      { name: "Membership Plans", href: "/membership" },
+      { name: "Gift Cards", href: "/gift-cards" },
     ],
     support: [
-      { name: 'Help Center', href: '/help' },
-      { name: 'Contact Us', href: '/contact' },
-      { name: 'Privacy Policy', href: '/privacy' },
-      { name: 'Terms of Service', href: '/terms' },
+      { name: "Help Center", href: "/help" },
+      { name: "Contact Us", href: "/contact" },
+      { name: "Privacy Policy", href: "/privacy" },
+      { name: "Terms of Service", href: "/terms" },
     ],
   };
 
   const socialLinks = [
-    { name: 'Facebook', icon: Facebook, href: '#' },
-    { name: 'Twitter', icon: Twitter, href: '#' },
-    { name: 'Instagram', icon: Instagram, href: '#' },
+    { name: "Facebook", icon: Facebook, href: "#" },
+    { name: "Twitter", icon: Twitter, href: "#" },
+    { name: "Instagram", icon: Instagram, href: "#" },
   ];
 
   return (
@@ -46,7 +53,8 @@ const Footer = () => {
                 </span>
               </div>
               <p className="text-neutral-grey text-sm leading-relaxed">
-                Your gateway to exclusive local deals and discounts. Save big while supporting local businesses.
+                Your gateway to exclusive local deals and discounts. Save big
+                while supporting local businesses.
               </p>
               <div className="flex space-x-4">
                 {socialLinks.map((social) => {
@@ -114,7 +122,7 @@ const Footer = () => {
                   </li>
                 ))}
               </ul>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center space-x-2 text-neutral-grey text-sm">
                   <Mail size={16} />

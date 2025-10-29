@@ -1,0 +1,16 @@
+{
+  "name": "gosave-api",
+  "version": "1.0.0",
+  "description": "GoSave API for Vercel deployment",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.21.1",
+    "cors": "^2.8.5",
+    "helmet": "^8.0.0",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.4.7",
+    "@supabase/supabase-js": "^2.56.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
