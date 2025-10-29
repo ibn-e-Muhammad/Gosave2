@@ -50,6 +50,12 @@ module.exports = async (req, res) => {
     return res.redirect(307, newPath);
   }
 
+  // Handle doubled /api/api/v1/ routes (when frontend env var includes /api)
+  if (url.startsWith("/api/api/v1/")) {
+    const newPath = url.replace("/api/api/v1/", "/api/");
+    return res.redirect(307, newPath);
+  }
+
   try {
     // API Root endpoint
     if (url === "/api" || url === "/api/") {
@@ -472,7 +478,6 @@ module.exports = async (req, res) => {
         "GET /api/partners - Get all partners",
       ],
     });
-
   } catch (error) {
     console.error("API Error:", error);
     return res.status(500).json({
