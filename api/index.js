@@ -57,8 +57,9 @@ module.exports = async (req, res) => {
           health: "/api/health",
           register: "/api/register",
           login: "/api/login",
+          me: "/api/me",
           deals: "/api/deals",
-          partners: "/api/partners",
+          partners: "/api/partners"
         },
         cors: {
           origin: "https://gosave-gamma.vercel.app",
@@ -131,16 +132,16 @@ module.exports = async (req, res) => {
         message: "POST request received successfully",
         body: req.body,
         headers: req.headers,
-        content_type: req.headers['content-type']
+        content_type: req.headers["content-type"],
       });
     }
     if (url === "/api/register" && method === "POST") {
       console.log("Registration request received:", {
         body: req.body,
         headers: req.headers,
-        content_type: req.headers['content-type']
+        content_type: req.headers["content-type"],
       });
-      
+
       const { email, password, full_name, phone } = req.body;
 
       // Validation
@@ -302,6 +303,66 @@ module.exports = async (req, res) => {
       });
     }
 
+    // Get current user profile endpoint (for authenticated users)
+    if (url === "/api/me" && method === "GET") {
+      const authorization = req.headers.authorization;
+      
+      if (!authorization || !authorization.startsWith('Bearer ')) {
+        return res.status(401).json({
+          success: false,
+          error: "Authorization token required"
+        });
+      }
+
+      const token = authorization.split(' ')[1];
+      
+      try {
+        // Verify the token with Supabase
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        
+        if (authError || !user) {
+          return res.status(401).json({
+            success: false,
+            error: "Invalid or expired token"
+          });
+        }
+
+        // Get user profile from our database
+        const { data: userProfile, error: profileError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("auth_user_id", user.id)
+          .single();
+
+        if (profileError || !userProfile) {
+          return res.status(404).json({
+            success: false,
+            error: "User profile not found"
+          });
+        }
+
+        return res.status(200).json({
+          success: true,
+          user: {
+            id: userProfile.id,
+            auth_user_id: userProfile.auth_user_id,
+            email: userProfile.email,
+            full_name: userProfile.full_name,
+            phone: userProfile.phone,
+            membership_status: userProfile.membership_status,
+            is_admin: userProfile.is_admin,
+            email_verified: !!user.email_confirmed_at,
+          }
+        });
+      } catch (error) {
+        console.error("Get user profile error:", error);
+        return res.status(500).json({
+          success: false,
+          error: "Failed to get user profile"
+        });
+      }
+    }
+
     // Get Deals endpoint
     if (url === "/api/deals" && method === "GET") {
       const { data: deals, error } = await supabase
@@ -397,9 +458,10 @@ module.exports = async (req, res) => {
         "GET /api/health - Health check",
         "POST /api/register - User registration",
         "POST /api/login - User login",
+        "GET /api/me - Get current user profile",
         "GET /api/deals - Get all deals",
-        "GET /api/partners - Get all partners",
-      ],
+        "GET /api/partners - Get all partners"
+      ]
     });
   } catch (error) {
     console.error("API Error:", error);
