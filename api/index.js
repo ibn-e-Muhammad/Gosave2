@@ -124,8 +124,23 @@ module.exports = async (req, res) => {
       }
     }
 
-    // User Registration endpoint
+    // Simple POST test endpoint
+    if (url === "/api/test-post" && method === "POST") {
+      return res.status(200).json({
+        success: true,
+        message: "POST request received successfully",
+        body: req.body,
+        headers: req.headers,
+        content_type: req.headers['content-type']
+      });
+    }
     if (url === "/api/register" && method === "POST") {
+      console.log("Registration request received:", {
+        body: req.body,
+        headers: req.headers,
+        content_type: req.headers['content-type']
+      });
+      
       const { email, password, full_name, phone } = req.body;
 
       // Validation
@@ -322,7 +337,7 @@ module.exports = async (req, res) => {
         original_price: null, // not in schema
         discounted_price: null, // not in schema
         category: deal.partner?.business_type,
-        status: 'active', // filtered by active status
+        status: "active", // filtered by active status
         expiry_date: deal.end_date,
         terms_conditions: null, // not in schema
         usage_limit: null, // not in schema
