@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react';
-import Container from './ui/Container';
+import Container from './UI/Container';
 
 const Footer = () => {
   const footerLinks = {
