@@ -46,13 +46,21 @@ module.exports = async (req, res) => {
 
   // Handle v1 compatibility routes
   if (url.startsWith("/api/v1/")) {
-    const newPath = url.replace("/api/v1/", "/api/");
+    let newPath = url.replace("/api/v1/", "/api/");
+    // Handle auth-specific path mapping
+    if (newPath.startsWith("/api/auth/")) {
+      newPath = newPath.replace("/api/auth/", "/api/");
+    }
     return res.redirect(307, newPath);
   }
 
   // Handle doubled /api/api/v1/ routes (when frontend env var includes /api)
   if (url.startsWith("/api/api/v1/")) {
-    const newPath = url.replace("/api/api/v1/", "/api/");
+    let newPath = url.replace("/api/api/v1/", "/api/");
+    // Handle auth-specific path mapping
+    if (newPath.startsWith("/api/auth/")) {
+      newPath = newPath.replace("/api/auth/", "/api/");
+    }
     return res.redirect(307, newPath);
   }
 
