@@ -1,14 +1,10 @@
 {
   "version": 2,
   "name": "gosave-platform",
+  "buildCommand": "cd gosave-frontend && npm run build",
+  "outputDirectory": "gosave-frontend/dist",
+  "installCommand": "cd gosave-frontend && npm install",
   "builds": [
-    {
-      "src": "gosave-frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    },
     {
       "src": "api/health.js",
       "use": "@vercel/node"
