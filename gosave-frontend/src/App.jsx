@@ -30,7 +30,7 @@ function App() {
   useEffect(() => {
     const fetchHealth = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/v1/health`);
+        const response = await axios.get(`${API_URL}/health`);
         setMessage(response.data.message);
         setApiStatus("connected");
       } catch (error) {

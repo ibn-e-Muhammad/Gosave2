@@ -15,7 +15,7 @@ const Partners = () => {
     const fetchPartners = async () => {
       try {
         const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-        const response = await fetch(`${API_URL}/api/v1/partners`);
+        const response = await fetch(`${API_URL}/partners`);
 
         if (response.ok) {
           const result = await response.json();

@@ -68,15 +68,12 @@ export const AuthProvider = ({ children }) => {
   // Fetch user profile from backend
   const fetchUserProfile = async (accessToken) => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/v1/auth/me`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/me`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.ok) {
         const result = await response.json();
