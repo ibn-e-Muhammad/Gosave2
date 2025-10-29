@@ -44,6 +44,9 @@ module.exports = async (req, res) => {
   const url = req.url;
   const method = req.method;
 
+  // Debug logging for troubleshooting
+  console.log(`[${new Date().toISOString()}] ${method} ${url}`);
+
   // Handle v1 compatibility routes
   if (url.startsWith("/api/v1/")) {
     let newPath = url.replace("/api/v1/", "/api/");
@@ -51,6 +54,7 @@ module.exports = async (req, res) => {
     if (newPath.startsWith("/api/auth/")) {
       newPath = newPath.replace("/api/auth/", "/api/");
     }
+    console.log(`[REDIRECT] ${url} -> ${newPath}`);
     return res.redirect(307, newPath);
   }
 
@@ -61,6 +65,7 @@ module.exports = async (req, res) => {
     if (newPath.startsWith("/api/auth/")) {
       newPath = newPath.replace("/api/auth/", "/api/");
     }
+    console.log(`[REDIRECT] ${url} -> ${newPath}`);
     return res.redirect(307, newPath);
   }
 
