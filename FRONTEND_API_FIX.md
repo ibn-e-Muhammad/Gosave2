@@ -3,6 +3,7 @@
 ## 🚨 **Critical Issue Identified:**
 
 The frontend is making incorrect API calls with double `/api` paths:
+
 - ❌ **Current**: `https://gosave2.vercel.app/api/api/v1/health`
 - ✅ **Should be**: `https://gosave2.vercel.app/api/health`
 
@@ -13,6 +14,7 @@ The frontend is making incorrect API calls with double `/api` paths:
 Go to your **GoSave-Frontend** project on Vercel and update:
 
 **Environment Variable to Update:**
+
 ```
 VITE_API_URL=https://gosave2.vercel.app/api
 ```
@@ -23,14 +25,14 @@ VITE_API_URL=https://gosave2.vercel.app/api
 
 The frontend should call these endpoints:
 
-| Frontend Expected | ✅ **Available Backend Endpoints** |
-|------------------|-----------------------------------|
-| `/api/v1/health` | `/api/health` |
-| `/api/v1/auth/me` | `/api/me` |
-| `/api/v1/auth/login` | `/api/login` |
-| `/api/v1/auth/register` | `/api/register` |
-| `/api/v1/deals` | `/api/deals` |
-| `/api/v1/partners` | `/api/partners` |
+| Frontend Expected       | ✅ **Available Backend Endpoints** |
+| ----------------------- | ---------------------------------- |
+| `/api/v1/health`        | `/api/health`                      |
+| `/api/v1/auth/me`       | `/api/me`                          |
+| `/api/v1/auth/login`    | `/api/login`                       |
+| `/api/v1/auth/register` | `/api/register`                    |
+| `/api/v1/deals`         | `/api/deals`                       |
+| `/api/v1/partners`      | `/api/partners`                    |
 
 ### 3. **Frontend Code Updates Needed**
 
@@ -43,24 +45,28 @@ If the frontend code is hardcoded with `/v1` paths, you'll need to update:
 ## 🎯 **Quick Fix Steps:**
 
 ### Step 1: Update Frontend Environment Variable
+
 1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
-2. Find your **GoSave-Frontend** project  
+2. Find your **GoSave-Frontend** project
 3. Go to **Settings** → **Environment Variables**
 4. Update `VITE_API_URL` to: `https://gosave2.vercel.app/api`
 5. **Redeploy** the frontend
 
 ### Step 2: Test After Update
+
 After redeploying frontend, these should work:
+
 - ✅ Health check calls
-- ✅ User authentication 
+- ✅ User authentication
 - ✅ Data fetching
 - ✅ All API interactions
 
 ## 📝 **Backend Status:**
 
 ✅ **All Required Endpoints Available:**
+
 - `GET /api/health` - Health check
-- `GET /api/me` - Get current user profile  
+- `GET /api/me` - Get current user profile
 - `POST /api/login` - User authentication
 - `POST /api/register` - User registration
 - `GET /api/deals` - Get deals data
@@ -73,6 +79,7 @@ After redeploying frontend, these should work:
 ## ⚡ **Expected Result:**
 
 After fixing the frontend API URL:
+
 - ❌ No more 404 errors
 - ✅ Successful API calls
 - ✅ User authentication working

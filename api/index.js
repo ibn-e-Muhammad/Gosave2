@@ -59,7 +59,7 @@ module.exports = async (req, res) => {
           login: "/api/login",
           me: "/api/me",
           deals: "/api/deals",
-          partners: "/api/partners"
+          partners: "/api/partners",
         },
         cors: {
           origin: "https://gosave-gamma.vercel.app",
@@ -306,24 +306,27 @@ module.exports = async (req, res) => {
     // Get current user profile endpoint (for authenticated users)
     if (url === "/api/me" && method === "GET") {
       const authorization = req.headers.authorization;
-      
-      if (!authorization || !authorization.startsWith('Bearer ')) {
+
+      if (!authorization || !authorization.startsWith("Bearer ")) {
         return res.status(401).json({
           success: false,
-          error: "Authorization token required"
+          error: "Authorization token required",
         });
       }
 
-      const token = authorization.split(' ')[1];
-      
+      const token = authorization.split(" ")[1];
+
       try {
         // Verify the token with Supabase
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser(token);
+
         if (authError || !user) {
           return res.status(401).json({
             success: false,
-            error: "Invalid or expired token"
+            error: "Invalid or expired token",
           });
         }
 
@@ -337,7 +340,7 @@ module.exports = async (req, res) => {
         if (profileError || !userProfile) {
           return res.status(404).json({
             success: false,
-            error: "User profile not found"
+            error: "User profile not found",
           });
         }
 
@@ -352,13 +355,13 @@ module.exports = async (req, res) => {
             membership_status: userProfile.membership_status,
             is_admin: userProfile.is_admin,
             email_verified: !!user.email_confirmed_at,
-          }
+          },
         });
       } catch (error) {
         console.error("Get user profile error:", error);
         return res.status(500).json({
           success: false,
-          error: "Failed to get user profile"
+          error: "Failed to get user profile",
         });
       }
     }
@@ -460,9 +463,16 @@ module.exports = async (req, res) => {
         "POST /api/login - User login",
         "GET /api/me - Get current user profile",
         "GET /api/deals - Get all deals",
-        "GET /api/partners - Get all partners"
-      ]
+        "GET /api/partners - Get all partners",
+      ],
     });
+
+    // Add v1 compatibility routes for frontend
+    if (url.startsWith("/api/v1/")) {
+      const newPath = url.replace("/api/v1/", "/api/");
+      return res.redirect(307, newPath);
+    }
+
   } catch (error) {
     console.error("API Error:", error);
     return res.status(500).json({
