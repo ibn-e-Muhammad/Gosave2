@@ -297,8 +297,8 @@ module.exports = async (req, res) => {
           partners (
             id,
             brand_name,
-            logo_url,
-            business_type
+            business_type,
+            website
           )
         `
         )
@@ -332,8 +332,9 @@ module.exports = async (req, res) => {
           ? {
               id: deal.partners.id,
               brand_name: deal.partners.brand_name,
-              logo_url: deal.partners.logo_url,
+              logo_url: null, // not in schema
               business_type: deal.partners.business_type,
+              website: deal.partners.website,
             }
           : null,
       }));
