@@ -19,6 +19,8 @@ app.use(
     origin: [
       process.env.FRONTEND_URL || "http://localhost:5173",
       process.env.FRONTEND_URL_ALT || "http://localhost:5174",
+      "https://gosave-frontend.vercel.app",
+      "https://gosave-frontend-*.vercel.app", // For preview deployments
     ],
     credentials: true,
   })
