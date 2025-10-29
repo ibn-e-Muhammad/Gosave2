@@ -21,6 +21,8 @@ app.use(
       process.env.FRONTEND_URL_ALT || "http://localhost:5174",
       "https://gosave-frontend.vercel.app",
       "https://gosave-frontend-*.vercel.app", // For preview deployments
+      "https://gosave-gamma.vercel.app", // Your actual frontend domain
+      "https://gosave-*.vercel.app", // For any GoSave Vercel deployments
     ],
     credentials: true,
   })
