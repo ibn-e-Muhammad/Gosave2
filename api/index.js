@@ -332,9 +332,11 @@ module.exports = async (req, res) => {
 
     // Get current user profile endpoint (for authenticated users)
     if (processUrl === "/api/me" && method === "GET") {
+      console.log(`[/api/me] Headers:`, JSON.stringify(req.headers));
       const authorization = req.headers.authorization;
 
       if (!authorization || !authorization.startsWith("Bearer ")) {
+        console.log(`[/api/me] No valid authorization header`);
         return res.status(401).json({
           success: false,
           error: "Authorization token required",
