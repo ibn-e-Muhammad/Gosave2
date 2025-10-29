@@ -1,30 +1,19 @@
 {
   "version": 2,
   "name": "gosave-platform",
-  "builds": [
-    {
-      "src": "gosave-frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    },
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
+  "buildCommand": "cd gosave-frontend && npm run build",
+  "outputDirectory": "gosave-frontend/dist",
+  "installCommand": "cd gosave-frontend && npm install",
+  "framework": "vite",
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs18.x"
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     }
   ]
 }

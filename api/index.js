@@ -1,55 +1,42 @@
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const path = require("path");
+// Simple Vercel serverless function
+export default function handler(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
 
-// Import the existing server setup but modify for Vercel
-const app = express();
+  // Simple routing
+  if (req.url === '/api' || req.url === '/api/') {
+    return res.status(200).json({
+      message: "GoSave API is running on Vercel!",
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || "production",
+      endpoints: [
+        "/api/v1/health",
+        "/api/v1/auth",
+        "/api/v1/deals",
+        "/api/v1/partners"
+      ]
+    });
+  }
 
-// Middleware
-app.use(helmet());
-app.use(
-  cors({
-    origin: [
-      process.env.FRONTEND_URL || "http://localhost:5173",
-      process.env.FRONTEND_URL_ALT || "http://localhost:5174",
-    ],
-    credentials: true,
-  })
-);
-app.use(express.json());
+  if (req.url === '/api/v1/health') {
+    return res.status(200).json({
+      message: "GoSave API Health Check - OK!",
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || "production",
+      status: "healthy"
+    });
+  }
 
-// Import the existing routes
-const apiRoutes = require("./routes/api/v1");
-
-// Health check route
-app.get("/api/v1/health", (req, res) => {
-  res.json({
-    message: "GoSave API is running on Vercel!",
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || "production",
-  });
-});
-
-// API routes
-app.use("/api/v1", apiRoutes);
-
-// 404 handler
-app.use((req, res) => {
+  // Default response
   res.status(404).json({
-    error: "Route not found",
-    path: req.originalUrl,
+    error: "API endpoint not found",
+    path: req.url
   });
-});
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: "Something went wrong!",
-    message: err.message,
-  });
-});
-
-// Export for Vercel
-module.exports = app;
+}
